@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Icon Generator</title>
+    <style>
+        body { background: #222; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        canvas { border: 2px solid #555; margin-bottom: 20px; box-shadow: 0 0 20px #000; }
+        button { padding: 15px 30px; font-size: 20px; background: #00d4ff; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Right-click image to Save as "icon.png"</h2>
+    <canvas id="iconCanvas" width="512" height="512"></canvas>
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 1. Draw Background (Dark Circle for "Maskable" safety)
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, 512, 512);
+        
+        // 2. Draw Subtle Grid
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 4;
+        for(let i=0; i<512; i+=64) {
+            ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+        }
+
+        // 3. Draw Planet
+        const grad = ctx.createLinearGradient(0, 0, 512, 512);
+        grad.addColorStop(0, '#cc3333');
+        grad.addColorStop(1, '#660000');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(256, 256, 200, 0, Math.PI*2);
+        ctx.fill();
+
+        // 4. Draw Ship Icon
+        ctx.save();
+        ctx.translate(256, 256);
+        ctx.scale(3, 3); // Scale up
+        
+        // Ship Body
+        ctx.fillStyle = '#ddd';
+        ctx.beginPath();
+        ctx.ellipse(0, -15, 30, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ccc';
+        ctx.fillRect(-5, 0, 10, 35);
+        
+        // Wings
+        ctx.fillStyle = '#eee';
+        ctx.fillRect(-25, 10, 8, 30);
+        ctx.fillRect(17, 10, 8, 30);
+        
+        // Engine Glow
+        ctx.fillStyle = '#00d4ff';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00d4ff';
+        ctx.fillRect(-24, 35, 6, 6);
+        ctx.fillRect(18, 35, 6, 6);
+        
+        ctx.restore();
+
+        // 5. Border Ring
+        ctx.strokeStyle = "#ff9900";
+        ctx.lineWidth = 15;
+        ctx.beginPath();
+        ctx.arc(256, 256, 240, 0, Math.PI*2);
+        ctx.stroke();
+
+    </script>
+</body>
+</html>
