@@ -1122,23 +1122,23 @@
         const databaseGrid = document.getElementById('database-grid');
         
         const enemyData = [
-            {type: 'scout', name: 'Scout', desc: 'Light reconnaissance vessel. Fast but fragile.', hp: 1, score: 10},
-            {type: 'cruiser', name: 'Cruiser', desc: 'Heavily armored assault ship. Fires dual blasts.', hp: 3, score: 50},
-            {type: 'scarab', name: 'Void Stinger', desc: 'Swarm attacker. Agile and aggressive.', hp: 4, score: 60},
-            {type: 'obsidian', name: 'Golden Enforcer', desc: 'Durable hull with disruptive weaponry.', hp: 6, score: 80},
-            {type: 'bio', name: 'Organic Terror', desc: 'Erratic movement and self-healing hull.', hp: 8, score: 120},
-            {type: 'cube', name: 'Cyber Fortress', desc: 'Massive durability. Absorbs heavy fire.', hp: 15, score: 150},
-            {type: 'zarris_fighter', name: 'Zarris Drone', desc: 'Asymmetrical fighter from the Gamma Quadrant.', hp: 5, score: 90},
-            {type: 'void_mine', name: 'Void Mine', desc: 'Stationary magnetic hazard.', hp: 10, score: 30}
+            {type: 'scout', name: 'Scout', desc: 'Light reconnaissance vessel. Fast but fragile.', hp: 2, score: 10},
+            {type: 'cruiser', name: 'Cruiser', desc: 'Heavily armored assault ship. Fires dual blasts.', hp: 5, score: 50},
+            {type: 'scarab', name: 'Void Stinger', desc: 'Swarm attacker. Agile and aggressive.', hp: 6, score: 60},
+            {type: 'obsidian', name: 'Golden Enforcer', desc: 'Durable hull with disruptive weaponry.', hp: 10, score: 80},
+            {type: 'bio', name: 'Organic Terror', desc: 'Erratic movement and self-healing hull.', hp: 12, score: 120},
+            {type: 'cube', name: 'Cyber Fortress', desc: 'Massive durability. Absorbs heavy fire.', hp: 24, score: 150},
+            {type: 'zarris_fighter', name: 'Zarris Drone', desc: 'Asymmetrical fighter from the Gamma Quadrant.', hp: 8, score: 90},
+            {type: 'void_mine', name: 'Void Mine', desc: 'Stationary magnetic hazard.', hp: 15, score: 30}
         ];
         
         const bossData = [
-            {name: 'General Kael', desc: 'Fleet Commander. Fires tactical bursts.', hp: 150, score: 1000},
-            {name: 'Void Lord', desc: 'Wields the power of the singularity.', hp: 250, score: 2000},
-            {name: 'Cyber Matriarch', desc: 'Assimilates technology. High regeneration.', hp: 400, score: 3000},
-            {name: 'Cosmic Entity', desc: 'Pure energy being. Shifts reality.', hp: 600, score: 5000},
-            {name: 'Void Empress', desc: 'The end of all things. Beware.', hp: 750, score: 6000},
-            {name: 'General Zarris', desc: 'Tyrant of the Fatu-Krey. Armed with Omega weapons.', hp: 1000, score: 10000}
+            {name: 'General Kael', desc: 'Fleet Commander. Fires tactical bursts.', hp: 250, score: 1000},
+            {name: 'Void Lord', desc: 'Wields the power of the singularity.', hp: 400, score: 2000},
+            {name: 'Cyber Matriarch', desc: 'Assimilates technology. High regeneration.', hp: 600, score: 3000},
+            {name: 'Cosmic Entity', desc: 'Pure energy being. Shifts reality.', hp: 900, score: 5000},
+            {name: 'Void Empress', desc: 'The end of all things. Beware.', hp: 1200, score: 6000},
+            {name: 'General Zarris', desc: 'Tyrant of the Fatu-Krey. Armed with Omega weapons.', hp: 2000, score: 10000}
         ];
         
         function generateDatabase() {
@@ -1855,7 +1855,7 @@
                 this.width = 60;
                 this.height = 70;
                 this.lastShot = 0;
-                this.fireRate = 25; // Buff: Slightly faster base fire rate (was 30)
+                this.fireRate = 28; // Difficulty Adjustment: Slightly slower (was 25)
                 
                 this.coins = 0;
                 this.damage = 1; 
@@ -2110,49 +2110,49 @@
                 this.vx = Math.sin(this.y * 0.01) * 2; 
                 this.swing = Math.random() * 0.05;
                 
-                // DIFFICULTY ADJUSTMENT: HP REDUCED BY ~50%
+                // DIFFICULTY ADJUSTMENT: HP INCREASED SIGNIFICANTLY
                 if (type === 'cube') { // Tier 5 Tank (Borg Cube)
-                    this.hp = 8 * difficultyMultiplier; // Was 15
+                    this.hp = 12 * difficultyMultiplier; // Increased to 12
                     this.width = 80;
                     this.height = 80;
                     this.scoreVal = 150;
                     this.vy = 0.5 + (difficultyMultiplier * 0.1);
                 } else if (type === 'bio') { // Tier 4 Erratic (Species 8472)
-                    this.hp = 4 * difficultyMultiplier; // Was 8
+                    this.hp = 6 * difficultyMultiplier; // Increased to 6
                     this.width = 40;
                     this.height = 55;
                     this.scoreVal = 120;
                     this.vy = 3 + (difficultyMultiplier * 0.5); 
                     this.swing = 0.2; 
                 } else if (type === 'obsidian') { // Tier 2 Tank (Cardassian)
-                    this.hp = 3 * difficultyMultiplier; // Was 6
+                    this.hp = 5 * difficultyMultiplier; // Increased to 5
                     this.width = 60;
                     this.height = 70;
                     this.scoreVal = 80;
                     this.vy = 1.2 + (difficultyMultiplier * 0.1); 
                 } else if (type === 'scarab') { // Tier 3 Swarmer (Jem'Hadar)
-                    this.hp = 2 * difficultyMultiplier; // Was 4
+                    this.hp = 3 * difficultyMultiplier; // Increased to 3
                     this.width = 35;
                     this.height = 40;
                     this.scoreVal = 60;
                     this.vy = 2.5 + (difficultyMultiplier * 0.2); 
                 } else if (type === 'cruiser') { // Tier 1 Heavy (Romulan Warbird)
-                    this.hp = 2 * difficultyMultiplier; // Was 3
+                    this.hp = 3 * difficultyMultiplier; // Increased to 3
                     this.width = 72;
                     this.height = 48;
                     this.scoreVal = 50;
                 } else if (type === 'zarris_fighter') { // BONUS LEVEL ENEMY
-                    this.hp = 5 * difficultyMultiplier; 
+                    this.hp = 8 * difficultyMultiplier; // Increased to 8
                     this.width = 50; this.height = 50;
                     this.scoreVal = 90;
                     this.vy = 2.5;
                 } else if (type === 'void_mine') { // BONUS LEVEL HAZARD
-                    this.hp = 10 * difficultyMultiplier; 
+                    this.hp = 15 * difficultyMultiplier; // Increased to 15
                     this.width = 40; this.height = 40;
                     this.scoreVal = 30;
                     this.vy = 1; // Slow drift
                 } else { // Tier 1 Light (Klingon BoP)
-                    this.hp = 1 * difficultyMultiplier; // Stayed 1 (Minimum)
+                    this.hp = 2 * difficultyMultiplier; // Increased to 2 (Base)
                     this.width = 48;
                     this.height = 48;
                     this.scoreVal = 10;
@@ -2170,12 +2170,16 @@
                 }
 
                 const prog = Math.min(bossIndex, 5);
-                // DIFFICULTY ADJUSTMENT: Reduced Enemy Fire Rate
-                const baseChance = 0.0008 + (prog * 0.0002); // Was 0.0015 + ...
+                // DIFFICULTY ADJUSTMENT: Increased Enemy Fire Rate (0.0015 base)
+                const baseChance = 0.0015 + (prog * 0.0005); 
 
                 if (this.type !== 'void_mine' && Math.random() < baseChance * difficultyMultiplier) {
                     SoundManager.enemyShoot(); 
-                    bullets.push(new Bullet(this.x, this.y + 20, true));
+                    // Bullet speed also scales with difficulty now
+                    let bulletSpeed = 7 + (difficultyMultiplier * 2);
+                    let b = new Bullet(this.x, this.y + 20, true);
+                    b.vy = bulletSpeed;
+                    bullets.push(b);
                 }
 
                 if (this.y > canvas.height + 50) this.active = false;
@@ -2462,25 +2466,30 @@
                 this.targetY = 100;
                 this.phase = 0;
                 this.isBoss = true;
+                
+                // Progressive Boss Scaling: Bosses get +15% harder for each cycle (bossIndex)
+                // This prevents the game from getting too easy if you loop for a long time
+                let difficultyScale = 1 + (bossIndex * 0.15);
 
-                // DIFFICULTY ADJUSTMENT: Boss HP Reduced by 50%
+                // DIFFICULTY ADJUSTMENT: Boss HP Reduced by 50% -> then increased 50%
+                // Base HP Values increased by ~50% from previous "easy" state
                 if (name === "General Kael") {
-                    this.hp = 150; this.maxHp = 150; this.scoreVal = 1000; // Was 300
+                    this.hp = Math.floor(250 * difficultyScale); this.maxHp = this.hp; this.scoreVal = 1000;
                     this.width = 160; this.height = 100; // Reliant is wide
                 } else if (name === "Void Lord") {
-                    this.hp = 250; this.maxHp = 250; this.scoreVal = 2000; // Was 500
+                    this.hp = Math.floor(400 * difficultyScale); this.maxHp = this.hp; this.scoreVal = 2000;
                     this.width = 180; this.height = 100; 
                 } else if (name === "Cyber Matriarch") {
-                    this.hp = 400; this.maxHp = 400; this.scoreVal = 3000; // Was 800
+                    this.hp = Math.floor(600 * difficultyScale); this.maxHp = this.hp; this.scoreVal = 3000; 
                     this.width = 100; this.height = 180; 
                 } else if (name === "Cosmic Entity") {
-                    this.hp = 600; this.maxHp = 600; this.scoreVal = 5000; // Was 1200
+                    this.hp = Math.floor(900 * difficultyScale); this.maxHp = this.hp; this.scoreVal = 5000; 
                 } else if (name === "Void Empress") {
-                    this.hp = 750; this.maxHp = 750; this.scoreVal = 6000; // Was 1500
+                    this.hp = Math.floor(1200 * difficultyScale); this.maxHp = this.hp; this.scoreVal = 6000;
                     this.width = 200; this.height = 150; 
                 } else if (name === "General Zarris") {
-                    // BONUS BOSS
-                    this.hp = 1000; this.maxHp = 1000; this.scoreVal = 10000;
+                    // BONUS BOSS - Very tough
+                    this.hp = Math.floor(2000 * difficultyScale); this.maxHp = this.hp; this.scoreVal = 10000;
                     this.width = 180; this.height = 140; 
                 }
             }
@@ -2498,13 +2507,16 @@
                 this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
 
                 const prog = Math.min(bossIndex, 5);
-                // DIFFICULTY ADJUSTMENT: Reduced Boss Fire Rate
-                let chance = 0.015 + (prog * 0.002); // Was 0.025 + ...
+                // DIFFICULTY ADJUSTMENT: Bosses shoot more frequently (0.02 base)
+                // Also scales slightly with difficulty multiplier over time
+                let chance = (0.02 + (prog * 0.003)) * difficultyMultiplier; 
 
                 if (Math.random() < chance) {
                       if (this.name !== "Void Empress") {
                         SoundManager.enemyShoot(); 
-                        bullets.push(new Bullet(this.x, this.y + this.height/2, true));
+                        let b = new Bullet(this.x, this.y + this.height/2, true);
+                        b.vy = 7 + (difficultyMultiplier * 1.5); // Faster bullets later
+                        bullets.push(b);
                       }
                       
                       if (this.name === "Void Lord" || this.name === "Cyber Matriarch") {
@@ -2517,7 +2529,8 @@
                       else if (this.name === "Void Empress") {
                           SoundManager.enemyShoot();
                           let b = new Bullet(this.x, this.y + this.height/2, true);
-                          b.isOrb = true; b.color = '#d0f'; b.speed = 5; 
+                          b.isOrb = true; b.color = '#d0f'; 
+                          b.speed = 6 + difficultyMultiplier; 
                           bullets.push(b);
                       }
                       else if (this.name === "General Zarris") {
@@ -2525,7 +2538,7 @@
                           SoundManager.enemyShoot();
                           let b = new Bullet(this.x, this.y + this.height/2, true);
                           b.color = '#0f0'; // Green plasma
-                          b.speed = 7;
+                          b.speed = 8 + difficultyMultiplier;
                           bullets.push(b);
                       }
                 }
@@ -2775,14 +2788,14 @@
         function spawnEnemies() {
             if (bossActive || spawnDelay > 0) return; 
 
-            // DIFFICULTY ADJUSTMENT: Reduced Spawn Rate
-            // Base chance for random spawns (Reduced from 0.01)
-            if (Math.random() < 0.006 * difficultyMultiplier) {
+            // DIFFICULTY ADJUSTMENT: Increased Spawn Rate
+            // Base chance for random spawns (Original was ~0.014, we reduced to 0.006, now bumping to 0.012)
+            if (Math.random() < 0.012 * difficultyMultiplier) {
                  enemies.push(new Enemy(getRandomEnemyType()));
             }
             
-            // Chance for a Squad (Reduced from 0.005)
-            if (Math.random() < 0.003 * difficultyMultiplier) {
+            // Chance for a Squad (bumped to 0.005)
+            if (Math.random() < 0.005 * difficultyMultiplier) {
                 spawnSquadron();
             }
         }
