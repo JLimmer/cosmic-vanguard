@@ -549,6 +549,22 @@
             display: none !important;
         }
 
+        /* Continue Screen Styles */
+        #continue-timer {
+            font-size: 60px;
+            color: #00d4ff;
+            font-weight: bold;
+            text-shadow: 0 0 20px #00d4ff;
+            margin: 10px 0;
+            animation: pulse-timer 1s infinite;
+        }
+
+        @keyframes pulse-timer {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         /* LCARS decorative bars */
         .lcars-bar {
             height: 10px;
@@ -646,6 +662,7 @@
                 <li><strong>CREDITS:</strong> Collect golden bars to buy upgrades in the FABRICATOR.</li>
                 <li><strong>NOVA BOMB:</strong> When the bar is full, press the button for a screen-clearing blast.</li>
                 <li><strong>OBJECTIVE:</strong> Survive the waves, defeat the Galactic Bosses, and secure the sector.</li>
+                <li><strong>BONUS:</strong> Survive long enough to unlock the <strong>SIGMA 13</strong> protocol.</li>
             </ul>
         </div>
         <button id="close-instructions-btn" class="btn">UNDERSTOOD</button>
@@ -704,11 +721,24 @@
     </div>
 
     <div id="game-over-screen" class="hidden">
-        <h1>Mission Failed</h1>
-        <p id="final-score">Score: 0</p>
-        <p id="best-score" style="color: #888; margin-top: 5px;">High Score: 0</p>
-        <p id="new-highscore-msg" style="color: #ffcc00; font-weight: bold; display: none;">NEW HIGH SCORE!</p>
-        <button class="btn" id="restart-btn">Re-Initialize</button>
+        <h1 id="game-over-title">System Critical</h1>
+        
+        <!-- Continue Section -->
+        <div id="continue-section">
+            <p style="color: #ccc; font-size: 18px;">Systems Failing...</p>
+            <div id="continue-timer">15</div>
+            <button class="btn" id="continue-btn">EMERGENCY RESTART</button>
+            <p style="color: #888; margin-top: 10px; font-size: 14px;">Lives Remaining: <span id="lives-display" style="color: #ffcc00; font-weight:bold;">3</span></p>
+        </div>
+
+        <!-- Final Game Over Section -->
+        <div id="final-options" class="hidden">
+            <p id="final-score">Score: 0</p>
+            <p id="best-score" style="color: #888; margin-top: 5px;">High Score: 0</p>
+            <p id="new-highscore-msg" style="color: #ffcc00; font-weight: bold; display: none;">NEW HIGH SCORE!</p>
+            <button class="btn" id="restart-btn">Re-Initialize</button>
+            <button class="btn btn-tertiary" id="home-btn" style="margin-top: 15px;">Return to Base</button>
+        </div>
     </div>
 
     <script>
@@ -956,6 +986,10 @@
         
         // Spawn Delay (for quiet time after boss)
         let spawnDelay = 0;
+
+        // Continue System State
+        let livesRemaining = 3;
+        let continueInterval = null;
         
         // Screen Shake State
         let shakeDuration = 0;
@@ -969,8 +1003,8 @@
         let currentBoss = null;
         let nextBossScore = 1000;
         let bossIndex = 0;
-        // New non-infringing names
-        const bossList = ["General Kael", "Void Lord", "Cyber Matriarch", "Cosmic Entity", "Void Empress"];
+        // New non-infringing names (Added General Zarris for Bonus Level)
+        const bossList = ["General Kael", "Void Lord", "Cyber Matriarch", "Cosmic Entity", "Void Empress", "General Zarris"];
 
         // Entity Arrays
         let player;
@@ -1093,15 +1127,18 @@
             {type: 'scarab', name: 'Void Stinger', desc: 'Swarm attacker. Agile and aggressive.', hp: 4, score: 60},
             {type: 'obsidian', name: 'Golden Enforcer', desc: 'Durable hull with disruptive weaponry.', hp: 6, score: 80},
             {type: 'bio', name: 'Organic Terror', desc: 'Erratic movement and self-healing hull.', hp: 8, score: 120},
-            {type: 'cube', name: 'Cyber Fortress', desc: 'Massive durability. Absorbs heavy fire.', hp: 15, score: 150}
+            {type: 'cube', name: 'Cyber Fortress', desc: 'Massive durability. Absorbs heavy fire.', hp: 15, score: 150},
+            {type: 'zarris_fighter', name: 'Zarris Drone', desc: 'Asymmetrical fighter from the Gamma Quadrant.', hp: 5, score: 90},
+            {type: 'void_mine', name: 'Void Mine', desc: 'Stationary magnetic hazard.', hp: 10, score: 30}
         ];
         
         const bossData = [
-            {name: 'General Kael', desc: 'Fleet Commander. Fires tactical bursts.', hp: 300, score: 1000},
-            {name: 'Void Lord', desc: 'Wields the power of the singularity.', hp: 500, score: 2000},
-            {name: 'Cyber Matriarch', desc: 'Assimilates technology. High regeneration.', hp: 800, score: 3000},
-            {name: 'Cosmic Entity', desc: 'Pure energy being. Shifts reality.', hp: 1200, score: 5000},
-            {name: 'Void Empress', desc: 'The end of all things. Beware.', hp: 1500, score: 6000}
+            {name: 'General Kael', desc: 'Fleet Commander. Fires tactical bursts.', hp: 150, score: 1000},
+            {name: 'Void Lord', desc: 'Wields the power of the singularity.', hp: 250, score: 2000},
+            {name: 'Cyber Matriarch', desc: 'Assimilates technology. High regeneration.', hp: 400, score: 3000},
+            {name: 'Cosmic Entity', desc: 'Pure energy being. Shifts reality.', hp: 600, score: 5000},
+            {name: 'Void Empress', desc: 'The end of all things. Beware.', hp: 750, score: 6000},
+            {name: 'General Zarris', desc: 'Tyrant of the Fatu-Krey. Armed with Omega weapons.', hp: 1000, score: 10000}
         ];
         
         function generateDatabase() {
@@ -1311,6 +1348,7 @@
 
             draw() {
                 ctx.save();
+                
                 ctx.globalAlpha = Math.max(0, this.life);
                 ctx.fillStyle = this.color;
                 ctx.font = `bold ${this.size}px Arial`;
@@ -1318,6 +1356,7 @@
                 ctx.lineWidth = 2;
                 ctx.strokeText(this.text, this.x, this.y);
                 ctx.fillText(this.text, this.x, this.y);
+                
                 ctx.restore();
             }
         }
@@ -1498,12 +1537,17 @@
                 this.active = true;
                 this.wobble = Math.random() * Math.PI * 2;
                 
-                const r = Math.random();
-                if (r < 0.2) this.type = 'SHIELD';
-                else if (r < 0.4) this.type = 'WINGMAN';
-                else if (r < 0.6) this.type = 'RAPID';
-                else if (r < 0.8) this.type = 'ROCKET';
-                else this.type = 'MINE';
+                // Small chance to spawn CHRONO (Sigma 13)
+                if (Math.random() < 0.02) {
+                    this.type = 'CHRONO';
+                } else {
+                    const r = Math.random();
+                    if (r < 0.2) this.type = 'SHIELD';
+                    else if (r < 0.4) this.type = 'WINGMAN';
+                    else if (r < 0.6) this.type = 'RAPID';
+                    else if (r < 0.8) this.type = 'ROCKET';
+                    else this.type = 'MINE';
+                }
             }
 
             update() {
@@ -1518,33 +1562,51 @@
                 ctx.translate(this.x, this.y);
                 ctx.shadowBlur = 10;
                 
-                let color = '#fff';
-                let label = '?';
-                
-                if (this.type === 'SHIELD') { color = '#00aaff'; label = 'S'; }
-                else if (this.type === 'WINGMAN') { color = '#ffcc00'; label = 'W'; }
-                else if (this.type === 'RAPID') { color = '#ff3300'; label = 'F'; }
-                else if (this.type === 'ROCKET') { color = '#ff9900'; label = 'R'; }
-                else if (this.type === 'MINE') { color = '#cc00cc'; label = 'M'; }
-                
-                ctx.fillStyle = color;
-                ctx.shadowColor = color;
-                ctx.beginPath();
-                ctx.arc(0, 0, 15, 0, Math.PI*2);
-                ctx.fill();
-                
-                // Inner ring
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(0, 0, 10, 0, Math.PI*2);
-                ctx.stroke();
+                if (this.type === 'CHRONO') {
+                    // SIGMA 13 ART
+                    ctx.shadowColor = '#00f';
+                    let grad = ctx.createLinearGradient(-10, 0, 10, 0);
+                    grad.addColorStop(0, '#00f');
+                    grad.addColorStop(0.5, '#fff'); // Bright core
+                    grad.addColorStop(1, '#00f');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(-10, -15, 20, 30);
+                    
+                    // Caps
+                    ctx.fillStyle = '#555';
+                    ctx.fillRect(-12, -18, 24, 5); 
+                    ctx.fillRect(-12, 13, 24, 5);
+                }
+                else {
+                    // STANDARD UPGRADES
+                    let color = '#fff';
+                    let label = '?';
+                    
+                    if (this.type === 'SHIELD') { color = '#00aaff'; label = 'S'; }
+                    else if (this.type === 'WINGMAN') { color = '#ffcc00'; label = 'W'; }
+                    else if (this.type === 'RAPID') { color = '#ff3300'; label = 'F'; }
+                    else if (this.type === 'ROCKET') { color = '#ff9900'; label = 'R'; }
+                    else if (this.type === 'MINE') { color = '#cc00cc'; label = 'M'; }
+                    
+                    ctx.fillStyle = color;
+                    ctx.shadowColor = color;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 15, 0, Math.PI*2);
+                    ctx.fill();
+                    
+                    // Inner ring
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 10, 0, Math.PI*2);
+                    ctx.stroke();
 
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(label, 0, 1);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(label, 0, 1);
+                }
                 
                 ctx.restore();
             }
@@ -1730,9 +1792,30 @@
                 this.active = true;
                 this.flashTimer = 0;
                 this.shieldHitTimer = 0; // New: For shield ripple effect
+                this.invincible = false; // New: For respawn
             }
 
             takeDamage(amount) {
+                if (this.invincible) return; // Ignore damage if invincible
+
+                // SIGMA 13 CHECK
+                if (this.isPlayer && this.hasSigma13 && (this.hp - amount <= 0)) {
+                    this.hp = this.maxHp;
+                    this.hasSigma13 = false;
+                    this.invincible = true;
+                    setTimeout(() => { if(this) this.invincible = false; }, 3000);
+                    
+                    // Clear screen
+                    bullets = [];
+                    enemies.forEach(e => e.takeDamage(1000));
+                    
+                    showComms("SIGMA 13", "TIMELINE RESTORED.");
+                    // Flash blue
+                    flashDuration = 10;
+                    // Override default logic
+                    return;
+                }
+
                 this.hp -= amount;
                 this.flashTimer = 5;
                 if(this.isPlayer) this.shieldHitTimer = 10; // Trigger shield ripple
@@ -1772,7 +1855,7 @@
                 this.width = 60;
                 this.height = 70;
                 this.lastShot = 0;
-                this.fireRate = 30; 
+                this.fireRate = 25; // Buff: Slightly faster base fire rate (was 30)
                 
                 this.coins = 0;
                 this.damage = 1; 
@@ -1786,6 +1869,10 @@
                 
                 this.ultimateCharge = 0;
                 this.maxUltimate = 100;
+                
+                // Bonus Level Transformation State
+                this.isProtector = false; 
+                this.hasSigma13 = false;
             }
 
             setTarget(tx, ty) {
@@ -1794,7 +1881,11 @@
             }
 
             activateUpgrade(type) {
-                if (type === 'SHIELD') {
+                if (type === 'CHRONO') {
+                    this.hasSigma13 = true;
+                    showComms("ACQUIRED", "SIGMA 13 DEVICE INSTALLED.");
+                }
+                else if (type === 'SHIELD') {
                     this.hp = Math.min(this.maxHp, this.hp + 50);
                     updateHealth();
                 } 
@@ -1865,6 +1956,11 @@
                 if (this.flashTimer > 0) this.flashTimer--;
                 if (this.shieldHitTimer > 0) this.shieldHitTimer--;
                 
+                // Handle Invincibility Visuals (Blinking)
+                if (this.invincible) {
+                    if (frameCount % 10 < 5) this.flashTimer = 2;
+                }
+
                 if (frameCount % 5 === 0) updateTimersUI();
             }
 
@@ -1915,23 +2011,78 @@
 
                 if (this.flashTimer > 0) ctx.globalCompositeOperation = 'source-atop'; 
 
-                // Ship Hull
-                ctx.fillStyle = '#ddd';
-                ctx.beginPath();
-                ctx.ellipse(0, -15, 30, 15, 0, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#ccc';
-                ctx.fillRect(-5, 0, 10, 35);
-                ctx.fillStyle = '#eee';
-                ctx.fillRect(-25, 10, 8, 30);
-                ctx.fillRect(17, 10, 8, 30);
-                ctx.fillStyle = '#0099ff';
-                ctx.fillRect(-24, 35, 6, 4);
-                ctx.fillRect(18, 35, 6, 4);
-                ctx.fillStyle = '#ff3300';
-                ctx.beginPath();
-                ctx.arc(0, 5, 3, 0, Math.PI * 2);
-                ctx.fill();
+                // --- DRAW PLAYER SHIP ---
+                if (this.isProtector) {
+                    // NSEA PROTECTOR (Galaxy Quest Ship)
+                    let scale = 1.0; 
+
+                    // 1. Rear Ion Thrusters (The long blue exhaust)
+                    ctx.shadowBlur = 15; ctx.shadowColor = '#0af';
+                    ctx.fillStyle = '#0af'; // Bright Blue Ion
+                    ctx.fillRect(-22, 40, 6, 15);
+                    ctx.fillRect(16, 40, 6, 15);
+                    ctx.shadowBlur = 0; // Reset
+
+                    // 2. Main Fuselage (Model-Kit Grey)
+                    ctx.fillStyle = '#e0e0e0'; 
+                    ctx.beginPath();
+                    ctx.moveTo(0, -40); // Long Nose
+                    ctx.lineTo(10, -10);
+                    ctx.lineTo(12, 40); // Body width
+                    ctx.lineTo(-12, 40);
+                    ctx.lineTo(-10, -10);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // 3. The "Galaxy Quest" Blue Stripe
+                    ctx.fillStyle = '#0044aa';
+                    ctx.fillRect(-5, -25, 10, 60);
+
+                    // 4. Command Deck (Detachable Module)
+                    ctx.fillStyle = '#f0f0f0';
+                    ctx.beginPath();
+                    ctx.arc(0, -15, 14, 0, Math.PI*2);
+                    ctx.fill();
+                    // Bridge Window
+                    ctx.fillStyle = '#8ce';
+                    ctx.beginPath();
+                    ctx.arc(0, -18, 5, 0, Math.PI*2);
+                    ctx.fill();
+
+                    // 5. Swept Wings (Forward Swept)
+                    ctx.fillStyle = '#d0d0d0';
+                    ctx.beginPath();
+                    ctx.moveTo(-12, 10);
+                    ctx.lineTo(-40, 35); // Left Wing tip
+                    ctx.lineTo(-12, 40);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(12, 10);
+                    ctx.lineTo(40, 35); // Right Wing tip
+                    ctx.lineTo(12, 40);
+                    ctx.fill();
+                } 
+                else {
+                    // STANDARD VANGUARD SHIP
+                    // Ship Hull
+                    ctx.fillStyle = '#ddd';
+                    ctx.beginPath();
+                    ctx.ellipse(0, -15, 30, 15, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ccc';
+                    ctx.fillRect(-5, 0, 10, 35);
+                    ctx.fillStyle = '#eee';
+                    ctx.fillRect(-25, 10, 8, 30);
+                    ctx.fillRect(17, 10, 8, 30);
+                    ctx.fillStyle = '#0099ff';
+                    ctx.fillRect(-24, 35, 6, 4);
+                    ctx.fillRect(18, 35, 6, 4);
+                    ctx.fillStyle = '#ff3300';
+                    ctx.beginPath();
+                    ctx.arc(0, 5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
                 if (this.flashTimer > 0) {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -1959,39 +2110,49 @@
                 this.vx = Math.sin(this.y * 0.01) * 2; 
                 this.swing = Math.random() * 0.05;
                 
-                // Stats based on Type
-                if (type === 'cube') { // Tier 5 Tank
-                    this.hp = 15 * difficultyMultiplier;
+                // DIFFICULTY ADJUSTMENT: HP REDUCED BY ~50%
+                if (type === 'cube') { // Tier 5 Tank (Borg Cube)
+                    this.hp = 8 * difficultyMultiplier; // Was 15
                     this.width = 80;
                     this.height = 80;
                     this.scoreVal = 150;
                     this.vy = 0.5 + (difficultyMultiplier * 0.1);
-                } else if (type === 'bio') { // Tier 4 Erratic
-                    this.hp = 8 * difficultyMultiplier;
+                } else if (type === 'bio') { // Tier 4 Erratic (Species 8472)
+                    this.hp = 4 * difficultyMultiplier; // Was 8
                     this.width = 40;
                     this.height = 55;
                     this.scoreVal = 120;
                     this.vy = 3 + (difficultyMultiplier * 0.5); 
                     this.swing = 0.2; 
-                } else if (type === 'obsidian') { // Tier 2 Tank
-                    this.hp = 6 * difficultyMultiplier;
+                } else if (type === 'obsidian') { // Tier 2 Tank (Cardassian)
+                    this.hp = 3 * difficultyMultiplier; // Was 6
                     this.width = 60;
                     this.height = 70;
                     this.scoreVal = 80;
                     this.vy = 1.2 + (difficultyMultiplier * 0.1); 
-                } else if (type === 'scarab') { // Tier 3 Swarmer
-                    this.hp = 4 * difficultyMultiplier;
+                } else if (type === 'scarab') { // Tier 3 Swarmer (Jem'Hadar)
+                    this.hp = 2 * difficultyMultiplier; // Was 4
                     this.width = 35;
                     this.height = 40;
                     this.scoreVal = 60;
                     this.vy = 2.5 + (difficultyMultiplier * 0.2); 
-                } else if (type === 'cruiser') { // Tier 1 Heavy
-                    this.hp = 3 * difficultyMultiplier;
+                } else if (type === 'cruiser') { // Tier 1 Heavy (Romulan Warbird)
+                    this.hp = 2 * difficultyMultiplier; // Was 3
                     this.width = 72;
                     this.height = 48;
                     this.scoreVal = 50;
-                } else { // Tier 1 Light (Scout)
-                    this.hp = 1 * difficultyMultiplier;
+                } else if (type === 'zarris_fighter') { // BONUS LEVEL ENEMY
+                    this.hp = 5 * difficultyMultiplier; 
+                    this.width = 50; this.height = 50;
+                    this.scoreVal = 90;
+                    this.vy = 2.5;
+                } else if (type === 'void_mine') { // BONUS LEVEL HAZARD
+                    this.hp = 10 * difficultyMultiplier; 
+                    this.width = 40; this.height = 40;
+                    this.scoreVal = 30;
+                    this.vy = 1; // Slow drift
+                } else { // Tier 1 Light (Klingon BoP)
+                    this.hp = 1 * difficultyMultiplier; // Stayed 1 (Minimum)
                     this.width = 48;
                     this.height = 48;
                     this.scoreVal = 10;
@@ -2009,9 +2170,10 @@
                 }
 
                 const prog = Math.min(bossIndex, 5);
-                const baseChance = 0.0015 + (prog * 0.0003);
+                // DIFFICULTY ADJUSTMENT: Reduced Enemy Fire Rate
+                const baseChance = 0.0008 + (prog * 0.0002); // Was 0.0015 + ...
 
-                if (Math.random() < baseChance * difficultyMultiplier) {
+                if (this.type !== 'void_mine' && Math.random() < baseChance * difficultyMultiplier) {
                     SoundManager.enemyShoot(); 
                     bullets.push(new Bullet(this.x, this.y + 20, true));
                 }
@@ -2025,7 +2187,7 @@
                 c.save();
                 c.translate(this.x, this.y);
                 
-                if (this.type !== 'cube' && this.type !== 'bio') {
+                if (this.type !== 'cube' && this.type !== 'bio' && this.type !== 'zarris_fighter' && this.type !== 'void_mine') {
                     c.scale(1.2, -1.2); 
                 } else if (this.type === 'bio') {
                     c.scale(1.2, 1.2); 
@@ -2033,30 +2195,82 @@
 
                 if (this.flashTimer > 0) c.globalAlpha = 0.7;
 
-                // --- HIGH FIDELITY ENEMY ART ---
+                // --- HIGH FIDELITY ENEMY ART (MERGED USER STYLES) ---
                 if (this.type === 'cube') {
+                    // THE BORG CUBE (Styled)
                     let size = this.width * 0.8; 
+
+                    // 1. Base Hull (Dark Oily Metal Gradient)
                     let hullGrad = c.createLinearGradient(-size/2, -size/2, size/2, size/2);
-                    hullGrad.addColorStop(0, '#0a0a0a'); hullGrad.addColorStop(0.5, '#2a2a2a'); hullGrad.addColorStop(1, '#000');
+                    hullGrad.addColorStop(0, '#0a0a0a'); 
+                    hullGrad.addColorStop(0.5, '#2a2a2a'); 
+                    hullGrad.addColorStop(1, '#000');
                     c.fillStyle = hullGrad;
                     c.fillRect(-size/2, -size/2, size, size);
-                    c.strokeStyle = '#0f0'; c.lineWidth = 0.5; 
+
+                    // 2. The "Greebling" (Sharp, thin circuitry)
+                    c.strokeStyle = '#0f0';
+                    c.lineWidth = 0.5; 
                     c.beginPath();
                     for(let i = -size/2 + 5; i < size/2; i+=8) {
                         c.moveTo(i, -size/2); c.lineTo(i, size/2);
                         c.moveTo(-size/2, i); c.lineTo(size/2, i);
                     }
                     c.stroke();
-                    let glow = 0.2 + 0.3 * Math.sin(frameCount * 0.1); 
-                    c.shadowBlur = 10 * glow; c.shadowColor = '#0f0';
-                    c.strokeStyle = `rgba(50, 255, 50, ${0.5 + glow*0.5})`;
-                    c.lineWidth = 1.5;
+
+                    // 3. Pulsing Nodes & Edge Glow
+                    let pulse = Math.abs(Math.sin(frameCount * 0.05));
+                    c.shadowBlur = 10 * pulse;
+                    c.shadowColor = '#0f0';
+                    c.strokeStyle = `rgba(50, 255, 50, ${0.5 + pulse*0.5})`;
+                    c.lineWidth = 1.5; 
                     c.strokeRect(-size/2, -size/2, size, size);
+
+                    // Random active nodes
                     c.fillStyle = '#afa';
-                    c.fillRect(-size/4, -size/4, 4, 4); c.fillRect(size/4 - 4, size/4 - 4, 4, 4);
-                    c.shadowBlur = 0; 
+                    c.fillRect(-size/4, -size/4, 4, 4); 
+                    c.fillRect(size/4 - 4, size/4 - 4, 4, 4);
+                    c.shadowBlur = 0;
+                } 
+                else if (this.type === 'cruiser') {
+                    // ROMULAN WARBIRD (Styled)
+                    let upperWingGrad = c.createLinearGradient(0, -10, 0, 20);
+                    upperWingGrad.addColorStop(0, '#4a8e6e'); // Highlight
+                    upperWingGrad.addColorStop(1, '#2a5e3e'); // Shadow
+
+                    let lowerWingGrad = c.createLinearGradient(0, 20, 0, 40);
+                    lowerWingGrad.addColorStop(0, '#1a3e2a');
+                    lowerWingGrad.addColorStop(1, '#3a6e4e');
+
+                    // 1. Upper Hull (Curved Shoulders)
+                    c.fillStyle = upperWingGrad;
+                    c.beginPath();
+                    c.moveTo(0, -5);
+                    c.bezierCurveTo(-35, -5, -40, 10, -35, 25);
+                    c.lineTo(-15, 12); c.lineTo(15, 12); c.lineTo(35, 25);
+                    c.bezierCurveTo(40, 10, 35, -5, 0, -5);
+                    c.fill();
+
+                    // 2. Lower Hull (Connecting Loop)
+                    c.fillStyle = lowerWingGrad;
+                    c.beginPath();
+                    c.moveTo(-35, 25);
+                    c.quadraticCurveTo(-25, 45, 0, 40); c.quadraticCurveTo(25, 45, 35, 25);
+                    c.lineTo(25, 20); c.lineTo(-25, 20); 
+                    c.fill();
+
+                    // 3. The "Head" & Singularity Core
+                    c.fillStyle = '#1a3e2a';
+                    c.beginPath();
+                    c.ellipse(0, 5, 10, 14, 0, 0, Math.PI*2);
+                    c.fill();
+
+                    // Bright Green Core Glow in the center gap
+                    c.shadowBlur = 12; c.shadowColor = '#5f5'; c.fillStyle = '#efe';
+                    c.beginPath(); c.arc(0, 12, 3, 0, Math.PI*2); c.fill(); c.shadowBlur = 0;
                 } 
                 else if (this.type === 'bio') {
+                    // SPECIES 8472 BIOSHIP (Retained High Fidelity)
                     let size = this.width * 0.6;
                     let bioGrad = c.createRadialGradient(0, 0, 2, 0, 0, size);
                     bioGrad.addColorStop(0, '#dca'); 
@@ -2071,112 +2285,168 @@
                     c.fill();
 
                     let pulse = Math.abs(Math.sin(frameCount * 0.1));
-                    c.strokeStyle = `rgba(200, 255, 100, ${pulse})`;
+                    c.strokeStyle = `rgba(255, 200, 50, ${pulse})`;
                     c.lineWidth = 2;
                     c.beginPath();
-                    c.moveTo(0, 10);
-                    c.lineTo(5, -10);
-                    c.lineTo(-2, -20);
+                    c.moveTo(0, 10); c.lineTo(5, -10); c.lineTo(-2, -20);
                     c.stroke();
                     
                     c.shadowBlur = 10; c.shadowColor = '#ff0';
                     c.fillStyle = '#ff0'; 
-                    c.beginPath();
-                    c.arc(0, 0, 3, 0, Math.PI*2);
-                    c.fill();
+                    c.beginPath(); c.arc(0, 0, 3, 0, Math.PI*2); c.fill();
                     c.shadowBlur = 0;
                 }
                 else if (this.type === 'obsidian') {
-                    let size = this.width * 0.7;
-                    let hullGrad = c.createLinearGradient(-size/2, 0, size/2, 0);
-                    hullGrad.addColorStop(0, '#654'); 
-                    hullGrad.addColorStop(0.5, '#b96'); 
-                    hullGrad.addColorStop(1, '#654');
+                    // CARDASSIAN GALOR (Retained High Fidelity)
+                    let size = this.width * 0.6;
+                    let hullGrad = c.createLinearGradient(0, -size, 0, size);
+                    hullGrad.addColorStop(0, '#b96'); 
+                    hullGrad.addColorStop(1, '#654'); 
                     c.fillStyle = hullGrad;
+                    
                     c.beginPath();
-                    c.moveTo(-5, -size); 
-                    c.lineTo(5, -size);
-                    c.lineTo(8, 0); 
-                    c.lineTo(25, 10); 
-                    c.quadraticCurveTo(30, 25, 0, 30); 
-                    c.quadraticCurveTo(-30, 25, -25, 10); 
-                    c.lineTo(-8, 0);
+                    c.moveTo(-10, -size); c.lineTo(10, -size); 
+                    c.lineTo(15, 0); c.lineTo(-15, 0);
+                    c.fill();
+                    
+                    c.beginPath();
+                    c.moveTo(15, 0);
+                    c.quadraticCurveTo(30, 20, 0, 30); 
+                    c.quadraticCurveTo(-30, 20, -15, 0);
                     c.fill();
 
                     c.fillStyle = '#833';
-                    c.beginPath();
-                    c.arc(0, 15, 4, 0, Math.PI*2);
-                    c.fill();
-                    
-                    c.shadowBlur = 5; c.shadowColor = '#fa0';
-                    c.fillStyle = '#fa0';
-                    c.fillRect(-4, -size-2, 8, 3);
-                    c.shadowBlur = 0;
+                    c.beginPath(); c.arc(0, 15, 4, 0, Math.PI*2); c.fill();
                 }
                 else if (this.type === 'scarab') {
-                    let size = this.width * 0.6;
-                    c.fillStyle = '#444455';
+                    // JEM'HADAR FIGHTER (Retained High Fidelity)
+                    let size = this.width * 0.5;
+                    c.fillStyle = '#555566'; 
                     c.beginPath();
                     c.moveTo(0, size); 
-                    c.bezierCurveTo(size, size*0.5, size, -size*0.5, 0, -size); 
-                    c.bezierCurveTo(-size, -size*0.5, -size, size*0.5, 0, size); 
+                    c.lineTo(size, -size/2);
+                    c.lineTo(size-5, -size); 
+                    c.lineTo(-size+5, -size);
+                    c.lineTo(-size, -size/2);
+                    c.closePath();
                     c.fill();
 
-                    c.fillStyle = '#333344';
-                    c.beginPath();
-                    c.moveTo(0, size-5);
-                    c.lineTo(size-5, 0);
-                    c.lineTo(0, -size+5);
-                    c.lineTo(-size+5, 0);
-                    c.fill();
-
-                    c.shadowBlur = 8;
-                    c.shadowColor = '#b0f';
+                    c.shadowBlur = 8; c.shadowColor = '#b0f';
                     c.fillStyle = '#d0f';
-                    c.fillRect(-10, -15, 6, 10);
-                    c.fillRect(4, -15, 6, 10);
+                    c.fillRect(-5, -size, 10, 5); 
                     c.shadowBlur = 0;
                 }
-                else if (this.type === 'cruiser') {
-                    let upperWingGrad = c.createLinearGradient(0, -10, 0, 20);
-                    upperWingGrad.addColorStop(0, '#4a8e6e'); upperWingGrad.addColorStop(1, '#2a5e3e'); 
-                    let lowerWingGrad = c.createLinearGradient(0, 20, 0, 40);
-                    lowerWingGrad.addColorStop(0, '#1a3e2a'); lowerWingGrad.addColorStop(1, '#3a6e4e');
-                    c.fillStyle = upperWingGrad;
+                else if (this.type === 'zarris_fighter') {
+                    // SARRIS'S SOLDIER (Bonus Level Enemy)
+                    let size = this.width * 0.7;
+
+                    // 1. Hull Gradient (Swamp/Radioactive Green)
+                    let hullGrad = c.createLinearGradient(0, -size, 0, size);
+                    hullGrad.addColorStop(0, '#1a2a0a'); // Dark Shadow
+                    hullGrad.addColorStop(0.5, '#3a4a1a'); // Olive
+                    hullGrad.addColorStop(1, '#0f1a05'); // Dark Base
+                    c.fillStyle = hullGrad;
+                    
+                    // 2. Asymmetrical/Jagged Shape
                     c.beginPath();
-                    c.moveTo(0, -5);
-                    c.bezierCurveTo(-35, -5, -40, 10, -35, 25);
-                    c.lineTo(-15, 12); c.lineTo(15, 12); c.lineTo(35, 25);
-                    c.bezierCurveTo(40, 10, 35, -5, 0, -5);
+                    c.moveTo(0, size); // Tail
+                    c.lineTo(size, -size*0.2); // Right Wing spike
+                    c.lineTo(size*0.4, -size*0.6);
+                    c.lineTo(0, -size); // Nose
+                    c.lineTo(-size*0.4, -size*0.6);
+                    c.lineTo(-size, -size*0.2); // Left Wing spike
+                    c.closePath();
                     c.fill();
-                    c.fillStyle = lowerWingGrad;
+
+                    // 3. Armor Plating (The "Crushed" look)
+                    c.strokeStyle = '#2a3a1a'; c.lineWidth = 2;
                     c.beginPath();
-                    c.moveTo(-35, 25);
-                    c.quadraticCurveTo(-25, 45, 0, 40); c.quadraticCurveTo(25, 45, 35, 25);
-                    c.lineTo(25, 20); c.lineTo(-25, 20); 
-                    c.fill();
-                    c.fillStyle = '#1a3e2a';
+                    c.moveTo(0, -size); c.lineTo(0, size); // Spine
+                    c.moveTo(-size, -size*0.2); c.lineTo(size, -size*0.2); // Crossbar
+                    c.stroke();
+
+                    // 4. Plasma Vents (Glowing Green Eyes)
+                    c.shadowBlur = 8; c.shadowColor = '#6f0';
+                    c.fillStyle = '#cf0';
                     c.beginPath();
-                    c.ellipse(0, 5, 10, 14, 0, 0, Math.PI*2);
+                    c.ellipse(-12, -8, 3, 6, 0.4, 0, Math.PI*2); // Angled eyes
+                    c.ellipse(12, -8, 3, 6, -0.4, 0, Math.PI*2);
                     c.fill();
-                    c.shadowBlur = 12; c.shadowColor = '#5f5'; c.fillStyle = '#efe';
-                    c.beginPath(); c.arc(0, 12, 3, 0, Math.PI*2); c.fill(); c.shadowBlur = 0;
-                } 
+                    c.shadowBlur = 0;
+                }
+                else if (this.type === 'void_mine') {
+                    // MAGNETIC MINE (Bonus Level Hazard)
+                    let r = this.width/2;
+
+                    // 1. Core Sphere (Metallic Purple/Blue)
+                    let mineGrad = c.createRadialGradient(-5, -5, 2, 0, 0, r);
+                    mineGrad.addColorStop(0, '#aab'); // Shine
+                    mineGrad.addColorStop(0.5, '#556'); // Metal
+                    mineGrad.addColorStop(1, '#223'); // Shadow
+                    c.fillStyle = mineGrad;
+                    
+                    c.beginPath();
+                    c.arc(0, 0, r*0.7, 0, Math.PI*2);
+                    c.fill();
+
+                    // 2. The Spikes (Drawn in a loop)
+                    c.fillStyle = '#445';
+                    for(let i=0; i<6; i++) {
+                        let angle = (i/6) * Math.PI*2 + (frameCount * 0.02); // Rotates slowly
+                        let spikeLen = r;
+                        
+                        c.beginPath();
+                        c.moveTo(Math.cos(angle)*r*0.5, Math.sin(angle)*r*0.5);
+                        c.lineTo(Math.cos(angle)*spikeLen, Math.sin(angle)*spikeLen); // Tip
+                        c.strokeStyle = '#667';
+                        c.lineWidth = 4;
+                        c.stroke();
+                    }
+                    
+                    // 3. Magnetic Pulse (Purple Ring)
+                    let pulse = Math.abs(Math.sin(frameCount * 0.1));
+                    c.strokeStyle = `rgba(180, 50, 255, ${pulse})`;
+                    c.lineWidth = 2;
+                    c.beginPath();
+                    c.arc(0, 0, r, 0, Math.PI*2);
+                    c.stroke();
+                }
                 else {
-                    // Scout
-                    c.shadowBlur = 10; c.shadowColor = '#ff4400'; c.fillStyle = '#ff6600'; 
+                    // KLINGON BIRD OF PREY (Styled - Default Scout)
+                    // 1. Engine Glow (Bright Orange/Red)
+                    c.shadowBlur = 10; c.shadowColor = '#ff4400'; c.fillStyle = '#ff6600';
                     c.fillRect(-6, -5, 12, 4); c.shadowBlur = 0;
+
+                    // 2. Main Hull Gradient (Rusty Metal)
                     let grad = c.createLinearGradient(-15, 0, 15, 0);
-                    grad.addColorStop(0, '#3e3020'); grad.addColorStop(0.5, '#7e6040'); grad.addColorStop(1, '#3e3020');
+                    grad.addColorStop(0, '#3e3020'); // Dark rust shadow
+                    grad.addColorStop(0.5, '#7e6040'); // Metallic bronze highlight
+                    grad.addColorStop(1, '#3e3020');
+
                     c.fillStyle = grad;
+                    // 3. The Shape (Aggressive Triangle)
                     c.beginPath();
-                    c.moveTo(0, 25); c.lineTo(6, 5); c.lineTo(30, 20); c.lineTo(22,-2);
-                    c.lineTo(8, -10); c.lineTo(-8, -10); c.lineTo(-22,-2); c.lineTo(-30, 20);
-                    c.lineTo(-6, 5); c.closePath(); c.fill();
+                    c.moveTo(0, 25); // Nose
+                    c.lineTo(6, 5);
+                    c.lineTo(30, 20); // Right Wingtip
+                    c.lineTo(22,-2);
+                    c.lineTo(8, -10); // Rear right
+                    c.lineTo(-8, -10); // Rear left
+                    c.lineTo(-22,-2);
+                    c.lineTo(-30, 20); // Left Wingtip
+                    c.lineTo(-6, 5); 
+                    c.closePath(); 
+                    c.fill();
+
+                    // 4. Wing Disruptors (Glowing Red tips)
                     c.fillStyle = '#cc0000';
                     c.fillRect(-31, 18, 2, 5); c.fillRect(29, 18, 2, 5);
+
+                    // Feather plating lines
                     c.strokeStyle = '#2e2010'; c.lineWidth = 1;
-                    c.beginPath(); c.moveTo(-22, -2); c.lineTo(-8, 5); c.moveTo(22, -2); c.lineTo(8, 5); 
+                    c.beginPath();
+                    c.moveTo(-22, -2); c.lineTo(-8, 5); 
+                    c.moveTo(22, -2); c.lineTo(8, 5); 
                     c.stroke();
                 }
                 c.restore();
@@ -2193,18 +2463,25 @@
                 this.phase = 0;
                 this.isBoss = true;
 
+                // DIFFICULTY ADJUSTMENT: Boss HP Reduced by 50%
                 if (name === "General Kael") {
-                    this.hp = 300; this.maxHp = 300; this.scoreVal = 1000;
+                    this.hp = 150; this.maxHp = 150; this.scoreVal = 1000; // Was 300
+                    this.width = 160; this.height = 100; // Reliant is wide
                 } else if (name === "Void Lord") {
-                    this.hp = 500; this.maxHp = 500; this.scoreVal = 2000;
+                    this.hp = 250; this.maxHp = 250; this.scoreVal = 2000; // Was 500
+                    this.width = 180; this.height = 100; 
                 } else if (name === "Cyber Matriarch") {
-                    this.hp = 800; this.maxHp = 800; this.scoreVal = 3000;
-                    this.width = 150; this.height = 150;
+                    this.hp = 400; this.maxHp = 400; this.scoreVal = 3000; // Was 800
+                    this.width = 100; this.height = 180; 
                 } else if (name === "Cosmic Entity") {
-                    this.hp = 1200; this.maxHp = 1200; this.scoreVal = 5000;
+                    this.hp = 600; this.maxHp = 600; this.scoreVal = 5000; // Was 1200
                 } else if (name === "Void Empress") {
-                    this.hp = 1500; this.maxHp = 1500; this.scoreVal = 6000;
-                    this.width = 140; this.height = 120;
+                    this.hp = 750; this.maxHp = 750; this.scoreVal = 6000; // Was 1500
+                    this.width = 200; this.height = 150; 
+                } else if (name === "General Zarris") {
+                    // BONUS BOSS
+                    this.hp = 1000; this.maxHp = 1000; this.scoreVal = 10000;
+                    this.width = 180; this.height = 140; 
                 }
             }
 
@@ -2221,7 +2498,8 @@
                 this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
 
                 const prog = Math.min(bossIndex, 5);
-                let chance = 0.025 + (prog * 0.005);
+                // DIFFICULTY ADJUSTMENT: Reduced Boss Fire Rate
+                let chance = 0.015 + (prog * 0.002); // Was 0.025 + ...
 
                 if (Math.random() < chance) {
                       if (this.name !== "Void Empress") {
@@ -2230,16 +2508,24 @@
                       }
                       
                       if (this.name === "Void Lord" || this.name === "Cyber Matriarch") {
-                          let b1 = new Bullet(this.x, this.y + this.height/2, true);
-                          b1.speed = 6; b1.x -= 10;
-                          let b2 = new Bullet(this.x, this.y + this.height/2, true);
-                          b2.speed = 6; b2.x += 10;
+                          let b1 = new Bullet(this.x - 20, this.y + this.height/2, true);
+                          b1.vx = -2;
+                          let b2 = new Bullet(this.x + 20, this.y + this.height/2, true);
+                          b2.vx = 2;
                           bullets.push(b1, b2);
                       } 
                       else if (this.name === "Void Empress") {
                           SoundManager.enemyShoot();
                           let b = new Bullet(this.x, this.y + this.height/2, true);
                           b.isOrb = true; b.color = '#d0f'; b.speed = 5; 
+                          bullets.push(b);
+                      }
+                      else if (this.name === "General Zarris") {
+                          // Placeholder firing logic for Zarris
+                          SoundManager.enemyShoot();
+                          let b = new Bullet(this.x, this.y + this.height/2, true);
+                          b.color = '#0f0'; // Green plasma
+                          b.speed = 7;
                           bullets.push(b);
                       }
                 }
@@ -2253,36 +2539,230 @@
                 c.translate(this.x, this.y);
                 if (this.flashTimer > 0) c.globalAlpha = 0.7;
 
-                // --- BOSS ART (Simplified for length, but distinct shapes) ---
-                let scale = 0.8;
+                let scale = 0.8; // Standard scale for Bosses
+                
+                // --- MERGED BOSS ART ---
                 
                 if (this.name === "General Kael") {
-                    c.fillStyle = '#889'; c.fillRect(-45*scale, 10*scale, 8*scale, 50*scale); c.fillRect(37*scale, 10*scale, 8*scale, 50*scale);
-                    c.fillStyle = '#fff'; c.beginPath(); c.arc(0, 0, 50*scale, 0, Math.PI*2); c.fill();
-                    c.fillStyle = '#f00'; c.fillRect(-8*scale, -30*scale, 16*scale, 3*scale);
+                    // KHAN / USS RELIANT (Styled)
+                    // 1. Warp Nacelles (Underneath)
+                    c.fillStyle = '#889'; 
+                    c.fillRect(-45*scale, 10*scale, 8*scale, 50*scale);
+                    c.fillRect(37*scale, 10*scale, 8*scale, 50*scale);
+
+                    // Blue Glow strips
+                    c.shadowBlur = 8; c.shadowColor = '#00f'; c.fillStyle = '#00ffff';
+                    c.fillRect(-43*scale, 15*scale, 4*scale, 40*scale);
+                    c.fillRect(39*scale, 15*scale, 4*scale, 40*scale);
+                    c.shadowBlur = 0;
+
+                    // 2. Main Saucer (Clean Federation Gradient)
+                    let saucerGrad = c.createRadialGradient(0, 0*scale, 5*scale, 0, 0*scale, 50*scale);
+                    saucerGrad.addColorStop(0, '#fff');
+                    saucerGrad.addColorStop(0.6, '#cce');
+                    saucerGrad.addColorStop(1, '#99a');
+
+                    c.fillStyle = saucerGrad;
+                    c.beginPath();
+                    c.arc(0, 0, 50*scale, 0, Math.PI*2);
+                    c.fill();
+
+                    // Saucer details
+                    c.strokeStyle = 'rgba(150,150,180,0.5)'; c.lineWidth = 1;
+                    c.beginPath(); c.arc(0, 0, 35*scale, 0, Math.PI*2); c.stroke();
+
+                    // 3. The Rollbar & Torpedo Pod
+                    c.fillStyle = '#aab'; 
+                    c.fillRect(-55*scale, -18*scale, 110*scale, 10*scale);
+                    // Weapons Pod
+                    c.fillStyle = '#99a';
+                    c.beginPath();
+                    c.moveTo(-12*scale, -18*scale); c.lineTo(-16*scale, -30*scale);
+                    c.lineTo(16*scale, -30*scale); c.lineTo(12*scale, -18*scale);
+                    c.fill();
+
+                    // Red Phaser/Torpedo glow
+                    c.shadowBlur = 5; c.shadowColor = '#f00'; c.fillStyle = '#f00';
+                    c.fillRect(-8*scale, -30*scale, 16*scale, 3*scale);
+                    c.shadowBlur = 0;
                 } 
                 else if (this.name === "Void Lord") {
-                    c.fillStyle = '#200'; c.beginPath(); c.arc(0, 0, 15*scale, 0, Math.PI*2); c.fill();
-                    c.lineWidth = 2.5*scale; c.strokeStyle = '#a00';
+                    // NERO / NARADA (Styled)
+                    // 1. Center Core (Deep oily black)
+                    let coreGrad = c.createRadialGradient(0,0,0, 0,0,15*scale);
+                    coreGrad.addColorStop(0, '#200');
+                    coreGrad.addColorStop(1, '#000');
+                    c.fillStyle = coreGrad;
+                    c.beginPath();
+                    c.arc(0, 0, 15*scale, 0, Math.PI*2); c.fill();
+
+                    // 2. The Spikes (Heated Drills)
+                    c.lineWidth = 2.5*scale;
                     for(let i=0; i<12; i++) { 
                         let angle = (i/12) * Math.PI * 2 + frameCount * 0.01;
-                        c.beginPath(); c.moveTo(0,0); c.lineTo(Math.cos(angle)*65*scale, Math.sin(angle)*65*scale); c.stroke();
+                        let length = 65*scale; 
+
+                        // Gradient: Dark root -> Fiery tip
+                        let spikeGrad = c.createLinearGradient(0,0, Math.cos(angle)*length, Math.sin(angle)*length);
+                        spikeGrad.addColorStop(0.2, '#100'); 
+                        spikeGrad.addColorStop(0.7, '#620'); 
+                        spikeGrad.addColorStop(1, '#f40'); 
+
+                        c.strokeStyle = spikeGrad; c.beginPath();
+                        c.moveTo(Math.cos(angle)*15*scale, Math.sin(angle)*15*scale);
+
+                        // Jagged Line generator
+                        let midX = Math.cos(angle) * (length*0.6) + Math.cos(angle*8 + frameCount*0.1)*5;
+                        let midY = Math.sin(angle) * (length*0.6) + Math.sin(angle*8 + frameCount*0.1)*5;
+
+                        c.lineTo(midX, midY);
+                        c.lineTo(Math.cos(angle)*length, Math.sin(angle)*length);
+                        c.stroke();
                     }
+
+                    // 3. Central Drill Glow
+                    c.shadowBlur = 15; c.shadowColor = '#f00';
+                    c.fillStyle = `rgba(255, 50, 0, ${0.5 + Math.sin(frameCount*0.2)*0.2})`;
+                    c.beginPath(); c.arc(0, 0, 8*scale, 0, Math.PI*2); c.fill();
+                    c.shadowBlur = 0;
                 }
                 else if (this.name === "Cyber Matriarch") {
-                    c.strokeStyle = '#0f0'; c.lineWidth = 2; c.fillStyle='#111';
-                    c.beginPath(); c.rect(-60*scale, -60*scale, 120*scale, 120*scale); c.fill(); c.stroke();
-                    c.fillStyle = '#0f0'; c.beginPath(); c.arc(0,0,20*scale,0,Math.PI*2); c.fill();
+                    // BORG QUEEN (Diamond - Styled)
+                    // 1. Outer Hull (Obsidian Gradient)
+                    let hullGrad = c.createLinearGradient(0, -60*scale, 0, 60*scale);
+                    hullGrad.addColorStop(0, '#2a2a2a'); hullGrad.addColorStop(0.5, '#000'); hullGrad.addColorStop(1, '#1a1a1a');
+                    c.fillStyle = hullGrad;
+
+                    // Sharp green outline
+                    c.shadowBlur = 10; c.shadowColor = '#0f0';
+                    c.strokeStyle = '#5f5'; c.lineWidth = 2*scale;
+
+                    c.beginPath();
+                    c.moveTo(0, -60*scale); c.lineTo(60*scale, 0);
+                    c.lineTo(0, 60*scale); c.lineTo(-60*scale, 0);
+                    c.closePath();
+                    c.fill(); c.stroke();
+                    c.shadowBlur = 0;
+
+                    // 2. Inner Details
+                    c.strokeStyle = '#040'; c.lineWidth = 1;
+                    c.beginPath();
+                    c.moveTo(0, -40*scale); c.lineTo(40*scale, 0);
+                    c.lineTo(0, 40*scale); c.lineTo(-40*scale, 0); c.closePath();
+                    c.stroke();
+
+                    // 3. The Core
+                    let pulse = Math.abs(Math.sin(frameCount * 0.05));
+                    c.fillStyle = '#131';
+                    c.beginPath(); c.arc(0, 0, 20*scale, 0, Math.PI*2); c.fill();
+
+                    // Inner Pulsing Light
+                    c.shadowBlur = 15 + 5*pulse; c.shadowColor = '#0f0';
+                    c.fillStyle = `rgba(150, 255, 150, ${0.7 + pulse * 0.3})`;
+                    c.beginPath(); c.arc(0, 0, 12*scale, 0, Math.PI*2); c.fill();
+                    c.shadowBlur = 0;
                 }
                 else if (this.name === "Cosmic Entity") {
-                    c.shadowBlur = 20; c.shadowColor = '#fff'; c.fillStyle='#fff';
-                    c.beginPath(); c.arc(0,0,50*scale,0,Math.PI*2); c.fill(); c.shadowBlur=0;
-                    c.strokeStyle = 'rgba(100,200,255,0.8)'; c.lineWidth=3; c.beginPath(); c.arc(0,0,35*scale, frameCount*0.1, frameCount*0.1+Math.PI); c.stroke();
+                    // Q (Energy Being - Styled)
+                    // 1. The Core Flash
+                    c.shadowBlur = 20; c.shadowColor = '#fff';
+                    let g = c.createRadialGradient(0, 0, 2*scale, 0, 0, 45*scale);
+                    g.addColorStop(0, '#fff');
+                    g.addColorStop(0.3, '#eef');
+                    g.addColorStop(0.6, '#c0f'); 
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+
+                    c.fillStyle = g;
+                    c.beginPath(); c.arc(0, 0, 50*scale, 0, Math.PI*2); c.fill();
+                    c.shadowBlur = 0;
+
+                    // 2. Orbiting Energy Arcs
+                    c.lineWidth = 2.5*scale; c.lineCap = 'round';
+
+                    // Arc 1
+                    c.strokeStyle = 'rgba(100, 220, 255, 0.8)';
+                    c.beginPath();
+                    c.arc(0, 0, 35*scale, frameCount*0.1, frameCount*0.1 + Math.PI);
+                    c.stroke();
+
+                    // Arc 2
+                    c.strokeStyle = 'rgba(255, 100, 255, 0.8)';
+                    c.beginPath();
+                    c.arc(0, 0, 35*scale, -frameCount*0.12 + Math.PI/2, -frameCount*0.12 + Math.PI*1.5);
+                    c.stroke();
+
+                    // 3. Sparkles
+                    c.fillStyle = '#fff';
+                    let sparkAngle = frameCount * 0.3; let sparkDist = 30*scale;
+                    c.fillRect(Math.cos(sparkAngle)*sparkDist, Math.sin(sparkAngle)*sparkDist, 3*scale, 3*scale);
+                    c.fillRect(Math.cos(sparkAngle + 2)*sparkDist, Math.sin(sparkAngle + 2)*sparkDist, 2*scale, 2*scale);
                 }
-                else {
-                    c.fillStyle = '#4a3a5a';
-                    c.beginPath(); c.moveTo(0, 50*scale); c.quadraticCurveTo(45*scale, 0, 0, -50*scale); c.quadraticCurveTo(-45*scale, 0, 0, 50*scale); c.fill();
-                    c.fillStyle='#f0f'; c.beginPath(); c.arc(0, -30*scale, 5*scale, 0, Math.PI*2); c.fill();
+                else if (this.name === "Void Empress") {
+                    // VOID EMPRESS (Scimitar / Reman Warbird)
+                    c.fillStyle = '#222'; 
+                    c.strokeStyle = '#555';
+                    
+                    c.beginPath();
+                    c.moveTo(0, 70); // Nose
+                    c.quadraticCurveTo(40, 40, 100, 20); 
+                    c.lineTo(100, -40); 
+                    c.quadraticCurveTo(50, -20, 0, -50); 
+                    c.quadraticCurveTo(-50, -20, -100, -40); 
+                    c.lineTo(-100, 20);
+                    c.quadraticCurveTo(-40, 40, 0, 70); 
+                    c.fill();
+                    c.stroke();
+                    
+                    c.strokeStyle = '#4a4'; c.lineWidth = 1;
+                    c.beginPath();
+                    c.moveTo(0,0); c.lineTo(80, -10);
+                    c.moveTo(0,0); c.lineTo(-80, -10);
+                    c.stroke();
+                    
+                    let pulse = Math.abs(Math.sin(frameCount * 0.1));
+                    c.shadowBlur = 20 + 10*pulse; c.shadowColor = '#0f0';
+                    c.fillStyle = `rgba(50, 255, 50, ${pulse})`;
+                    c.beginPath(); c.arc(0, 20, 8, 0, Math.PI*2); c.fill();
+                    c.shadowBlur = 0;
+                }
+                else if (this.name === "General Zarris") {
+                    // SARRIS (The Fatu-Krey)
+                    // 1. Main Hull (Cruel, dark green metal)
+                    c.fillStyle = '#182211'; // Black-Green
+                    c.strokeStyle = '#4a5522'; // Lighter edges
+                    c.lineWidth = 3;
+
+                    c.beginPath();
+                    // Central Body
+                    c.moveTo(0, 60*scale); // Rear Tail
+                    c.lineTo(20*scale, 0);
+                    // Right Pincer
+                    c.lineTo(65*scale, -25*scale); // Spike tip
+                    c.lineTo(40*scale, -50*scale); // Inner recess
+                    c.lineTo(10*scale, -70*scale); // Nose
+                    // Left Pincer
+                    c.lineTo(-10*scale, -70*scale);
+                    c.lineTo(-40*scale, -50*scale);
+                    c.lineTo(-65*scale, -25*scale); // Spike tip
+                    c.lineTo(-20*scale, 0);
+                    c.closePath();
+                    c.fill();
+                    c.stroke();
+
+                    // 2. Internal Green Glow (Radioactive)
+                    c.shadowBlur = 20; c.shadowColor = '#3f0';
+                    c.fillStyle = '#5f0';
+                    
+                    // Glowing Ports on the Pincers
+                    c.beginPath();
+                    c.arc(-40*scale, -35*scale, 5*scale, 0, Math.PI*2);
+                    c.arc(40*scale, -35*scale, 5*scale, 0, Math.PI*2);
+                    c.fill();
+                    
+                    // 3. Sarris's Command Deck
+                    c.fillStyle = '#cf0';
+                    c.fillRect(-6*scale, -55*scale, 12*scale, 10*scale);
+                    c.shadowBlur = 0;
                 }
 
                 c.restore();
@@ -2295,32 +2775,53 @@
         function spawnEnemies() {
             if (bossActive || spawnDelay > 0) return; 
 
-            // Base chance for random spawns
-            if (Math.random() < 0.01 * difficultyMultiplier) {
+            // DIFFICULTY ADJUSTMENT: Reduced Spawn Rate
+            // Base chance for random spawns (Reduced from 0.01)
+            if (Math.random() < 0.006 * difficultyMultiplier) {
                  enemies.push(new Enemy(getRandomEnemyType()));
             }
             
-            // Chance for a Squad (Formation)
-            if (Math.random() < 0.005 * difficultyMultiplier) {
+            // Chance for a Squad (Reduced from 0.005)
+            if (Math.random() < 0.003 * difficultyMultiplier) {
                 spawnSquadron();
             }
         }
         
         function getRandomEnemyType() {
             const rand = Math.random();
-            if (bossIndex < 2) return rand > 0.7 ? 'cruiser' : 'scout';
-            if (bossIndex < 4) {
-                if (rand > 0.8) return 'obsidian';
-                if (rand > 0.3) return 'scarab';
-                return 'cruiser';
+            
+            // Bonus Level Check: Zarris is the 6th boss (index 5)
+            if (bossIndex === 5) {
+                if (rand > 0.95) return 'void_mine';
+                return 'zarris_fighter';
             }
-            if (rand > 0.9) return 'cube';
-            if (rand > 0.7) return 'bio';
-            return 'obsidian';
+
+            // Phase 1: Early Game (0-1 Bosses defeated)
+            if (bossIndex < 2) {
+                // Small chance to see a Cube early (Level 2)
+                if (bossIndex === 1 && rand > 0.97) return 'cube'; 
+                if (bossIndex === 1 && rand > 0.90) return 'obsidian';
+                return rand > 0.7 ? 'cruiser' : 'scout';
+            }
+            
+            // Phase 2: Mid Game (2-3 Bosses defeated)
+            if (bossIndex < 4) {
+                if (rand > 0.90) return 'cube';     // 10% chance (Cyber Fortress)
+                if (rand > 0.75) return 'obsidian'; // 15% chance (Golden Enforcer)
+                if (rand > 0.30) return 'scarab';   // 45% chance (Void Stinger)
+                return 'cruiser';                   // 30% chance
+            }
+            
+            // Phase 3: Late Game (4+ Bosses defeated)
+            if (rand > 0.80) return 'cube';     // 20% chance (Increased from 10%)
+            if (rand > 0.60) return 'bio';      // 20% chance (Organic Terror)
+            if (rand > 0.30) return 'obsidian'; // 30% chance
+            return 'scarab';                    // 30% chance
         }
         
         function spawnSquadron() {
-            const type = 'scout'; // Squads are usually lighter ships
+            // Squads can now be Scouts or Scarabs depending on difficulty
+            const type = (bossIndex > 2 && Math.random() > 0.5) ? 'scarab' : 'scout';
             const pattern = Math.random() > 0.5 ? 'V' : 'LINE';
             const startX = Math.random() * (canvas.width - 200) + 100;
             
@@ -2352,7 +2853,26 @@
                 document.getElementById('boss-name').innerText = "WARNING: " + name;
                 
                 getGeminiTaunt(name);
+                
+                // BONUS LEVEL TRIGGER
+                if (name === "General Zarris") {
+                    activateBonusLevel();
+                }
             }
+        }
+        
+        function activateBonusLevel() {
+            // Transform Player Logic
+            player.isProtector = true;
+            // Full heal for the bonus round
+            player.hp = player.maxHp; 
+            updateHealth();
+            
+            // Visual Flare
+            showComms("COMMAND", "SIGMA 13 ACTIVATED. SHIP RECONFIGURING.");
+            triggerShake(20, 5);
+            
+            // Could change background or music here in future
         }
         
         function updateBossUI(boss) {
@@ -2539,8 +3059,8 @@
             bossIndex++;
             nextBossScore = score + 1000; 
             
-            // 20 seconds delay
-            spawnDelay = 1200;
+            // REDUCED DELAY: Changed from 1200 (20s) to 180 (3s)
+            spawnDelay = 180;
             
             document.getElementById('boss-hud').style.display = 'none';
             player.hp = Math.min(player.maxHp, player.hp + 50);
@@ -2584,6 +3104,9 @@
             difficultyMultiplier = 1;
             spawnDelay = 0; 
             
+            // Reset Lives on Fresh Start
+            livesRemaining = 3;
+            
             bossActive = false;
             bossIndex = 0;
             nextBossScore = 1000;
@@ -2606,6 +3129,8 @@
             player.y = canvas.height - 100;
             player.targetX = player.x;
             player.targetY = player.y;
+            // Ensure player starts as normal ship
+            player.isProtector = false;
             
             updateUltimateUI();
             document.getElementById('score-display').innerText = `Score: 0`;
@@ -2620,20 +3145,107 @@
 
         function endGame() {
             gameState = 'GAMEOVER';
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            document.getElementById('ui-layer').classList.add('hidden');
+            document.getElementById('boss-hud').style.display = 'none';
+
+            // Check if we have lives left
+            if (livesRemaining > 0) {
+                startContinuePhase();
+            } else {
+                showFinalGameOver();
+            }
+        }
+
+        function startContinuePhase() {
+            document.getElementById('game-over-title').innerText = "CRITICAL FAILURE";
+            document.getElementById('continue-section').classList.remove('hidden');
+            document.getElementById('final-options').classList.add('hidden');
+            document.getElementById('lives-display').innerText = livesRemaining;
             
+            let timeLeft = 15;
+            const timerEl = document.getElementById('continue-timer');
+            const btn = document.getElementById('continue-btn');
+            
+            timerEl.innerText = timeLeft;
+            timerEl.style.color = '#00d4ff';
+            btn.disabled = false;
+            btn.style.opacity = "1";
+
+            if (continueInterval) clearInterval(continueInterval);
+            
+            continueInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = timeLeft;
+                
+                if (timeLeft <= 5) {
+                    timerEl.style.color = '#ff3300'; // Urgent red
+                    SoundManager.playTone(200, 'square', 0.1); // Beep
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(continueInterval);
+                    showFinalGameOver();
+                }
+            }, 1000);
+        }
+
+        function showFinalGameOver() {
+            if (continueInterval) clearInterval(continueInterval);
+            
+            document.getElementById('game-over-title').innerText = "MISSION FAILED";
+            document.getElementById('continue-section').classList.add('hidden');
+            document.getElementById('final-options').classList.remove('hidden');
+
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('trek1942_highscore', highScore);
                 document.getElementById('highscore-display').innerText = `High: ${highScore}`;
                 document.getElementById('new-highscore-msg').style.display = 'block';
+            } else {
+                document.getElementById('new-highscore-msg').style.display = 'none';
             }
             
             document.getElementById('final-score').innerText = `Final Score: ${score}`;
             document.getElementById('best-score').innerText = `High Score: ${highScore}`;
-            document.getElementById('game-over-screen').classList.remove('hidden');
-            document.getElementById('ui-layer').classList.add('hidden');
-            document.getElementById('boss-hud').style.display = 'none';
         }
+
+        // Continue Button Listener
+        document.getElementById('continue-btn').addEventListener('click', () => {
+            if (continueInterval) clearInterval(continueInterval);
+            livesRemaining--;
+            
+            // Respawn Logic
+            gameState = 'PLAYING';
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('hidden');
+            
+            // Restore Boss HUD if Active
+            if (bossActive && currentBoss) {
+                document.getElementById('boss-hud').style.display = 'flex';
+            }
+            
+            // 1. Heal Player
+            player.hp = player.maxHp;
+            player.active = true;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 100;
+            player.targetX = player.x;
+            player.targetY = player.y;
+            
+            // 2. Grant temporary invincibility (3 seconds)
+            player.invincible = true;
+            setTimeout(() => {
+                if(player) player.invincible = false;
+            }, 3000);
+
+            // 3. Clear immediate threats (Optional but fair)
+            bullets = []; // Clear all bullets
+            enemies.forEach(e => e.takeDamage(500)); // Nuke screen slightly
+            
+            updateHealth();
+            SoundManager.powerup(); // Play a sound for respawn
+        });
 
         function gameLoop() {
             requestAnimationFrame(gameLoop);
@@ -2740,6 +3352,14 @@
             gameState = 'PLAYING';
             document.getElementById('game-over-screen').classList.add('hidden');
             document.getElementById('ui-layer').classList.remove('hidden');
+        });
+        
+        // New Listener for Home Button
+        document.getElementById('home-btn').addEventListener('click', () => {
+            gameState = 'START'; // Reset state logic
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            // UI Layer is already hidden by endGame()
         });
 
         // Initialize stars/planets for background
