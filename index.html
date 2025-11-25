@@ -34,6 +34,7 @@
             height: 100vh;
         }
 
+        /* UI Layer - Hidden by default until game starts */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -485,8 +486,8 @@
 
         h1 {
             color: #ff9900; /* Sci-fi orange */
-            font-size: 40px;
-            margin-bottom: 10px;
+            font-size: 36px; /* Reduced font size */
+            margin-bottom: 5px;
             text-align: center;
             text-shadow: 0 0 20px #ff9900;
             letter-spacing: 2px;
@@ -496,17 +497,19 @@
             color: #ccc;
             text-align: center;
             max-width: 80%;
-            line-height: 1.5;
+            line-height: 1.4;
+            font-size: 14px; /* Reduced size */
+            margin-bottom: 10px;
         }
 
         .btn {
-            margin-top: 15px;
-            padding: 15px 40px;
+            margin-top: 10px; /* Reduced margin */
+            padding: 10px 30px; /* Reduced padding */
             background: #cc3333; /* Sci-fi red */
             color: white;
             border: none;
             border-radius: 25px; 
-            font-size: 24px;
+            font-size: 18px; /* Reduced font */
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
@@ -522,11 +525,31 @@
             box-shadow: 0 0 25px #ff3333;
         }
         
+        /* Difficulty Buttons */
+        .btn-easy {
+            background: #28a745;
+            box-shadow: 0 0 15px #28a745;
+        }
+        .btn-easy:hover { box-shadow: 0 0 25px #34ce57; }
+
+        .btn-medium {
+            background: #ffc107;
+            color: #000;
+            box-shadow: 0 0 15px #ffc107;
+        }
+        .btn-medium:hover { box-shadow: 0 0 25px #ffcd39; }
+
+        .btn-hard {
+            background: #dc3545;
+            box-shadow: 0 0 15px #dc3545;
+        }
+        .btn-hard:hover { box-shadow: 0 0 25px #e4606d; }
+        
         .btn-secondary {
             background: #0066cc;
             box-shadow: 0 0 15px #0066cc;
-            font-size: 18px;
-            padding: 10px 30px;
+            font-size: 14px; /* Reduced */
+            padding: 8px 20px; /* Reduced */
         }
         
         .btn-secondary:hover {
@@ -536,8 +559,8 @@
         .btn-tertiary {
             background: #444;
             box-shadow: 0 0 10px #444;
-            font-size: 16px;
-            padding: 10px 25px;
+            font-size: 14px; /* Reduced */
+            padding: 8px 20px; /* Reduced */
         }
         
         .btn-tertiary:hover {
@@ -548,6 +571,43 @@
         .hidden {
             display: none !important;
         }
+        
+        /* After Action Report Style */
+        #aar-container {
+            margin-top: 10px;
+            background: rgba(0, 20, 40, 0.7);
+            border: 1px solid #00d4ff;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 85%;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #aar-title {
+            color: #00d4ff;
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        #aar-text {
+            color: #fff;
+            font-style: italic;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .typing {
+            border-right: 2px solid #00d4ff;
+            animation: blink-cursor 0.7s step-end infinite;
+        }
+        
+        @keyframes blink-cursor { 50% { border-color: transparent; } }
 
         /* Continue Screen Styles */
         #continue-timer {
@@ -580,7 +640,8 @@
 
     <canvas id="gameCanvas"></canvas>
 
-    <div id="ui-layer">
+    <!-- HIDDEN BY DEFAULT: Game UI Layer -->
+    <div id="ui-layer" class="hidden">
         <div class="hud-top">
             <div class="hud-row">
                 <button id="pause-btn" class="hud-btn">PAUSE</button>
@@ -713,9 +774,18 @@
     <div id="start-screen">
         <h1>Cosmic Vanguard</h1>
         <p>Command the Vanguard Starship.</p>
-        <button class="btn" id="start-btn">Engage</button>
-        <div style="display:flex; gap:15px; margin-top:15px;">
-            <button class="btn btn-secondary" id="instructions-btn">Instructions</button>
+        
+        <!-- NEW: Start Screen High Score -->
+        <p id="start-highscore" style="margin-top: 5px; font-size: 12px; min-height: 20px;"></p>
+        
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px; width: 100%; max-width: 250px;">
+            <button class="btn btn-easy" onclick="startGame(1.0)">EASY</button>
+            <button class="btn btn-medium" onclick="startGame(2.0)">MEDIUM</button>
+            <button class="btn btn-hard" onclick="startGame(3.5)">HARD</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn btn-secondary" id="instructions-btn">Briefing</button>
             <button class="btn btn-tertiary" id="database-btn">Database</button>
         </div>
     </div>
@@ -736,24 +806,64 @@
             <p id="final-score">Score: 0</p>
             <p id="best-score" style="color: #888; margin-top: 5px;">High Score: 0</p>
             <p id="new-highscore-msg" style="color: #ffcc00; font-weight: bold; display: none;">NEW HIGH SCORE!</p>
+            
+            <!-- Gemini AAR Container -->
+            <div id="aar-container">
+                <div id="aar-title">Fleet Command Analysis</div>
+                <div id="aar-text">Subspace signal incoming...</div>
+            </div>
+
             <button class="btn" id="restart-btn">Re-Initialize</button>
             <button class="btn btn-tertiary" id="home-btn" style="margin-top: 15px;">Return to Base</button>
         </div>
     </div>
 
     <script>
-        // --- Gemini API Config ---
-        const apiKey = ""; // Provided by environment at runtime
-
-        // HELPER FUNCTION: DRAW GLOWING DOT (Used by multiple ships)
-        function glowDot(ctx, x, y, r, inner, outer) {
-            const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-            g.addColorStop(0, inner);
-            g.addColorStop(1, outer);
-            ctx.fillStyle = g;
+        // --- Helper function for drawing glow dots ---
+        function glowDot(ctx, x, y, radius, color, glowColor) {
+            ctx.save();
+            ctx.shadowBlur = radius * 2;
+            ctx.shadowColor = glowColor || color;
+            ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
+        }
+
+        // --- Gemini API Config ---
+        const apiKey = "AIzaSyDPt-LKNbhp4zsiSytYol1flLP8xZPritY"; // Provided by environment at runtime
+
+        // Game Difficulty Setting (1.0 = Easy, 2.0 = Medium, 3.5 = Hard)
+        let gameDifficultySetting = 1.0;
+        
+        // Helper to get difficulty name
+        function getDifficultyName(val) {
+            if (val >= 3.0) return "HARD";
+            if (val >= 2.0) return "MEDIUM";
+            return "EASY";
+        }
+
+        // Helper to update start screen text
+        function updateStartScreenScore() {
+            const el = document.getElementById('start-highscore');
+            const currentHigh = parseInt(localStorage.getItem('trek1942_highscore')) || 0;
+            const highDiff = localStorage.getItem('trek1942_high_difficulty') || "EASY";
+            
+            if (currentHigh > 0) {
+                let diffColor = "#28a745"; // Green
+                if (highDiff === "MEDIUM") diffColor = "#ffc107"; // Orange
+                if (highDiff === "HARD") diffColor = "#dc3545"; // Red
+
+                el.innerHTML = `Current Record: <span style="color:#00d4ff; font-weight:bold;">${currentHigh}</span> <span style="color:${diffColor}; font-size:10px; vertical-align:middle; border:1px solid ${diffColor}; padding:1px 3px; border-radius:3px;">${highDiff}</span>`;
+                el.style.color = "#ccc";
+                el.style.fontStyle = "normal";
+            } else {
+                el.innerText = "Captain on deck. Set a new fleet record!";
+                el.style.color = "#888";
+                el.style.fontWeight = "normal";
+                el.style.fontStyle = "italic";
+            }
         }
 
         async function getGeminiTaunt(bossName) {
@@ -781,6 +891,49 @@
             } catch (error) {
                 console.error("Gemini Error:", error);
                 showComms(bossName, "Communications disrupted...");
+            }
+        }
+
+        // ✨ NEW: Gemini After Action Report
+        async function getGeminiAAR(score, difficultyName, bossIndex) {
+             if (!apiKey) {
+                document.getElementById('aar-text').innerText = "Communication link offline. No fleet data available.";
+                return;
+            }
+
+            const bossDefeatedCount = bossIndex; 
+            const prompt = `You are a sci-fi Fleet Admiral debriefing a pilot after their ship was destroyed.
+            Performance Data:
+            - Score: ${score}
+            - Difficulty: ${difficultyName}
+            - Bosses Defeated: ${bossDefeatedCount}
+            
+            Write a 2-sentence performance review. Be encouraging if the score is high (>5000), stern/disappointed if low (<1000). Use sci-fi terminology. Do not use quotes.`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            document.getElementById('aar-text').innerText = "Decrypting transmission...";
+            document.getElementById('aar-text').classList.add('typing');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Transmission garbled. Report to the bridge.";
+                
+                document.getElementById('aar-text').classList.remove('typing');
+                document.getElementById('aar-text').innerText = text;
+                
+            } catch (error) {
+                console.error("Gemini AAR Error:", error);
+                document.getElementById('aar-text').classList.remove('typing');
+                document.getElementById('aar-text').innerText = "Signal lost. Data corrupted.";
             }
         }
 
@@ -856,19 +1009,75 @@
                 osc.stop(audioCtx.currentTime + 0.15);
             },
 
-            enemyShoot: () => {
+            // NEW: Unique Enemy Weapon Sounds
+            enemyShoot: (type) => {
                 if (isMuted || !audioCtx) return;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                const now = audioCtx.currentTime;
+
+                if (type === 'plasma') {
+                    // Heavy Green Plasma (Romulan) - Low thrum
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start();
+                    osc.stop(now + 0.3);
+                } 
+                else if (type === 'polaron') {
+                    // Polaron Beam (Jem'Hadar) - Electrical Buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                    gain.gain.setValueAtTime(0.03, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start();
+                    osc.stop(now + 0.1);
+                }
+                else if (type === 'disruptor') {
+                    // Gold Disruptor (Cardassian) - Warble
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.2);
+                    gain.gain.setValueAtTime(0.03, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start();
+                    osc.stop(now + 0.2);
+                }
+                else if (type === 'bio') {
+                    // Bio Spore - Squishy sound
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(300, now + 0.2);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                    osc.start();
+                    osc.stop(now + 0.2);
+                }
+                else if (type === 'laser') {
+                    // Borg Cutting Beam - Mechanical
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start();
+                    osc.stop(now + 0.1);
+                }
+                else {
+                    // Default Red Pulse (Klingon/Scout) - Sharp Zap
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                    gain.gain.setValueAtTime(0.03, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start();
+                    osc.stop(now + 0.1);
+                }
+
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.2);
             },
 
             explode: (large = false) => {
@@ -1156,64 +1365,84 @@
         function generateDatabase() {
             databaseGrid.innerHTML = ''; // Clear
             
-            // Render Enemies
-            enemyData.forEach(data => {
+            // Helper to build a card
+            const createCard = (item, isBoss) => {
                 const card = document.createElement('div');
                 card.className = 'enemy-card';
+                if(isBoss) card.style.borderColor = '#ff3300';
                 
+                // 1. Create Canvas Element directly
                 const cvs = document.createElement('canvas');
-                cvs.width = 100; cvs.height = 80;
+                cvs.width = 140; // Increased width
+                cvs.height = 100; // Increased height
+                // Canvas styling handled by CSS, but we can force it here to be sure
+                cvs.style.background = "rgba(0,0,0,0.5)";
+                cvs.style.borderRadius = "5px";
+                cvs.style.marginBottom = "10px";
+
+                // 2. Draw Ship
                 const c = cvs.getContext('2d');
                 
-                // Create dummy enemy to draw
-                const dummy = new Enemy(data.type, 50, 40); 
-                dummy.draw(c); // Pass the mini-context
+                // Force center coordinate drawing without translation hacks
+                // Just draw at center (width/2, height/2)
+                const centerX = cvs.width / 2;
+                const centerY = cvs.height / 2;
+
+                if (isBoss) {
+                    const dummy = new Boss(item.name);
+                    // Override coordinates to center
+                    dummy.x = centerX;
+                    dummy.y = centerY;
+                    
+                    // Scale down for preview
+                    c.save();
+                    c.translate(centerX, centerY);
+                    c.scale(0.6, 0.6);
+                    c.translate(-centerX, -centerY);
+                    dummy.draw(c);
+                    c.restore();
+                } else {
+                    const dummy = new Enemy(item.type, centerX, centerY);
+                    // Override to center just in case
+                    dummy.x = centerX;
+                    dummy.y = centerY;
+                    
+                    // Enemy draw handles its own scaling but let's ensure it draws at x,y
+                    dummy.draw(c);
+                }
+
+                // 3. Create Info Elements
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'enemy-name';
+                if(isBoss) nameDiv.style.color = '#ff3300';
+                nameDiv.innerText = item.name;
                 
-                card.innerHTML = `
-                    ${cvs.outerHTML}
-                    <div class="enemy-name">${data.name}</div>
-                    <div class="enemy-desc">${data.desc}</div>
-                    <div class="enemy-stats">HP: ${data.hp} | SCORE: ${data.score}</div>
-                `;
+                const descDiv = document.createElement('div');
+                descDiv.className = 'enemy-desc';
+                descDiv.innerText = item.desc;
                 
-                // Need to redraw canvas after inserting innerHTML because simple append copies HTML string not live canvas state?
-                // Actually innerHTML serialization of canvas is empty. 
-                // Better to append elements.
-                databaseGrid.appendChild(card);
-                // Re-get canvas to draw
-                const finalCvs = card.querySelector('canvas');
-                const finalC = finalCvs.getContext('2d');
-                dummy.draw(finalC);
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'enemy-stats';
+                if(isBoss) statsDiv.style.color = '#ff9900';
+                statsDiv.innerText = `HP: ${item.hp} | SCORE: ${item.score}`;
+
+                // 4. Assemble Card
+                card.appendChild(cvs);
+                card.appendChild(nameDiv);
+                card.appendChild(descDiv);
+                card.appendChild(statsDiv);
+                
+                return card;
+            };
+            
+            // Render Enemies
+            enemyData.forEach(data => {
+                databaseGrid.appendChild(createCard(data, false));
             });
             
             // Render Bosses
             bossData.forEach(data => {
-                const card = document.createElement('div');
-                card.className = 'enemy-card';
-                card.style.borderColor = '#ff3300'; // Boss styling
-                
-                const cvs = document.createElement('canvas');
-                cvs.width = 120; cvs.height = 100;
-                const c = cvs.getContext('2d');
-                
-                const dummy = new Boss(data.name);
-                dummy.x = 60; dummy.y = 50; // Center
-                dummy.draw(c);
-                
-                card.innerHTML = `
-                    <div style="width:120px; height:100px;"></div>
-                    <div class="enemy-name" style="color:#ff3300">${data.name}</div>
-                    <div class="enemy-desc">${data.desc}</div>
-                    <div class="enemy-stats" style="color:#ff9900">HP: ${data.hp} | SCORE: ${data.score}</div>
-                `;
-                
-                databaseGrid.appendChild(card);
-                const placeholder = card.children[0];
-                placeholder.replaceWith(cvs);
-                
-                // Re-draw
-                const finalC = cvs.getContext('2d');
-                dummy.draw(finalC);
+                databaseGrid.appendChild(createCard(data, true));
             });
         }
         
@@ -1728,18 +1957,24 @@
         }
 
         class Bullet {
-            constructor(x, y, isEnemy, vx = 0, vy = 0, color = null, size = 4) {
+            constructor(x, y, isEnemy, vx = 0, vy = 0, color = null, size = 4, weaponType = 'standard') {
                 this.x = x;
                 this.y = y;
                 this.isEnemy = isEnemy;
                 this.width = size;
                 this.height = size * 3; 
+                this.weaponType = weaponType;
+                this.frame = 0;
                 
                 if (vx === 0 && vy === 0) {
                     this.vx = 0;
                     this.vy = isEnemy ? 7 : -12;
-                    this.height = 15; 
-                    this.width = 4;
+                    // Default dimensions if not overridden
+                    if (weaponType === 'plasma') { this.width = 8; this.height = 8; this.vy = 5; }
+                    else if (weaponType === 'polaron') { this.width = 3; this.height = 25; this.vy = 9; }
+                    else if (weaponType === 'bio') { this.width = 6; this.height = 10; this.vy = 6; }
+                    else if (weaponType === 'laser') { this.width = 12; this.height = 4; this.vy = 4; } // Horizontal bar
+                    else { this.height = 15; this.width = 4; }
                 } else {
                     this.vx = vx;
                     this.vy = vy;
@@ -1749,12 +1984,18 @@
                 this.active = true;
                 this.color = color; 
                 this.isOrb = (Math.abs(this.width - this.height) < 2); 
-                this.isDiamond = false; // New shape flag
+                this.isDiamond = (weaponType === 'diamond');
             }
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
+                this.frame++;
+                
+                // Bio-spores wobble
+                if (this.weaponType === 'bio') {
+                    this.x += Math.sin(this.frame * 0.2) * 2;
+                }
                 
                 if (this.y < -50 || this.y > canvas.height + 50 || this.x < -50 || this.x > canvas.width + 50) {
                     this.active = false;
@@ -1763,46 +2004,70 @@
 
             draw() {
                 ctx.save();
+                ctx.translate(this.x, this.y);
                 
-                if (this.isDiamond) {
-                    // DIAMOND SHAPE WEAPON (Void Empress)
+                if (this.weaponType === 'diamond') {
+                    // DIAMOND SHAPE (Void Empress)
                     ctx.shadowBlur = 10;
                     ctx.shadowColor = this.color || '#d0f';
                     ctx.fillStyle = this.color || '#fff';
-                    
                     ctx.beginPath();
-                    ctx.moveTo(this.x, this.y - this.width); // Top
-                    ctx.lineTo(this.x + this.width, this.y); // Right
-                    ctx.lineTo(this.x, this.y + this.width); // Bottom
-                    ctx.lineTo(this.x - this.width, this.y); // Left
+                    ctx.moveTo(0, -this.width); 
+                    ctx.lineTo(this.width, 0); 
+                    ctx.lineTo(0, this.width); 
+                    ctx.lineTo(-this.width, 0); 
                     ctx.closePath();
                     ctx.fill();
                 }
-                else if (this.isOrb || this.width > 6) {
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = this.color || '#d0f';
-                    ctx.fillStyle = this.color || '#fff';
-                    
+                else if (this.weaponType === 'plasma') {
+                    // PLASMA TORPEDO (Romulan) - Glowing Orb
+                    ctx.shadowBlur = 8; ctx.shadowColor = '#0f0';
+                    ctx.fillStyle = '#5f5';
+                    ctx.beginPath(); ctx.arc(0,0, this.width/2, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath(); ctx.arc(0,0, this.width/4, 0, Math.PI*2); ctx.fill();
+                }
+                else if (this.weaponType === 'polaron') {
+                    // POLARON BEAM (Jem'Hadar) - Long purple needle
+                    ctx.fillStyle = '#b0f';
+                    ctx.shadowBlur = 5; ctx.shadowColor = '#b0f';
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                }
+                else if (this.weaponType === 'disruptor') {
+                     // GOLD WAVE (Cardassian) - Crescent
+                     ctx.fillStyle = '#fb0';
+                     ctx.shadowBlur = 4; ctx.shadowColor = '#fb0';
+                     ctx.beginPath();
+                     ctx.arc(0, -2, 6, 0, Math.PI, false); // Top arch
+                     ctx.quadraticCurveTo(0, 4, 6, -2);
+                     ctx.fill();
+                }
+                else if (this.weaponType === 'bio') {
+                    // BIO SPORE (Species 8472) - Organic Teardrop
+                    ctx.fillStyle = '#d94';
                     ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.width/2, 0, Math.PI*2);
+                    ctx.arc(0, 0, 4, 0, Math.PI*2);
+                    ctx.moveTo(-2, 0); ctx.lineTo(0, -8); ctx.lineTo(2,0);
                     ctx.fill();
-                } 
+                }
+                else if (this.weaponType === 'laser') {
+                    // CUTTING LASER (Borg) - Wide Green Bar
+                    ctx.fillStyle = '#0f0';
+                    ctx.shadowBlur = 5; ctx.shadowColor = '#0f0';
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                }
                 else {
-                    // Standard Beams
+                    // STANDARD PULSE (Scout/Player)
                     if (this.color) {
-                         ctx.fillStyle = this.color;
-                         ctx.shadowBlur = 5;
-                         ctx.shadowColor = this.color;
+                         ctx.fillStyle = this.color; ctx.shadowBlur = 5; ctx.shadowColor = this.color;
                     } else if (this.isEnemy) {
-                        ctx.fillStyle = '#00ff00';
-                        ctx.shadowBlur = 5;
-                        ctx.shadowColor = '#00ff00';
+                        ctx.fillStyle = '#ff3333'; // Red for basic enemies
+                        ctx.shadowBlur = 5; ctx.shadowColor = '#f00';
                     } else {
                         ctx.fillStyle = '#ffaa00';
-                        ctx.shadowBlur = 5;
-                        ctx.shadowColor = '#ffaa00';
+                        ctx.shadowBlur = 5; ctx.shadowColor = '#ffaa00';
                     }
-                    ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+                    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
                 }
                 ctx.restore();
             }
@@ -2159,39 +2424,42 @@
                 this.vx = Math.sin(this.y * 0.01) * 2; 
                 this.swing = Math.random() * 0.05;
                 
-                // DIFFICULTY ADJUSTMENT: HP REDUCED BY ~50%
-                if (type === 'cube') { // Lattice Node
-                    this.hp = 8 * difficultyMultiplier; 
-                    this.width = 70;
-                    this.height = 70;
+                // APPLY DIFFICULTY TO HP
+                let hpMult = difficultyMultiplier * gameDifficultySetting;
+
+                // Stats based on Type
+                if (type === 'cube') { // Tier 5 Tank (Borg Cube)
+                    this.hp = 8 * hpMult; 
+                    this.width = 80;
+                    this.height = 80;
                     this.scoreVal = 150;
                     this.vy = 0.5 + (difficultyMultiplier * 0.1);
-                } else if (type === 'bio') { // Triarch Brood
-                    this.hp = 4 * difficultyMultiplier; 
+                } else if (type === 'bio') { // Tier 4 Erratic (Species 8472)
+                    this.hp = 4 * hpMult; 
                     this.width = 40;
                     this.height = 55;
                     this.scoreVal = 120;
                     this.vy = 3 + (difficultyMultiplier * 0.5); 
                     this.swing = 0.2; 
-                } else if (type === 'obsidian') { // Sable Dominion
-                    this.hp = 3 * difficultyMultiplier; 
+                } else if (type === 'obsidian') { // Tier 2 Tank (Cardassian)
+                    this.hp = 3 * hpMult; 
                     this.width = 60;
                     this.height = 70;
                     this.scoreVal = 80;
                     this.vy = 1.2 + (difficultyMultiplier * 0.1); 
-                } else if (type === 'scarab') { // Shard Legion
-                    this.hp = 2 * difficultyMultiplier; 
+                } else if (type === 'scarab') { // Tier 3 Swarmer (Jem'Hadar)
+                    this.hp = 2 * hpMult; 
                     this.width = 35;
                     this.height = 40;
                     this.scoreVal = 60;
                     this.vy = 2.5 + (difficultyMultiplier * 0.2); 
-                } else if (type === 'cruiser') { // Eclipse Sovereignty
-                    this.hp = 2 * difficultyMultiplier; 
+                } else if (type === 'cruiser') { // Tier 1 Heavy (Romulan Warbird)
+                    this.hp = 2 * hpMult; 
                     this.width = 72;
                     this.height = 48;
                     this.scoreVal = 50;
-                } else { // Drake Clans
-                    this.hp = 1 * difficultyMultiplier; 
+                } else { // Tier 1 Light (Klingon BoP)
+                    this.hp = 1 * hpMult; 
                     this.width = 48;
                     this.height = 48;
                     this.scoreVal = 10;
@@ -2209,12 +2477,23 @@
                 }
 
                 const prog = Math.min(bossIndex, 5);
-                // DIFFICULTY ADJUSTMENT: Reduced Enemy Fire Rate
-                const baseChance = 0.0008 + (prog * 0.0002); // Was 0.0015 + ...
+                // APPLY DIFFICULTY TO FIRE RATE
+                // Base chance * Diff Multiplier * Game Setting
+                const baseChance = (0.0008 + (prog * 0.0002)) * gameDifficultySetting;
 
                 if (Math.random() < baseChance * difficultyMultiplier) {
-                    SoundManager.enemyShoot(); 
-                    bullets.push(new Bullet(this.x, this.y + 20, true));
+                    // DETERMINE WEAPON TYPE BASED ON SHIP TYPE
+                    let wType = 'standard';
+                    if (this.type === 'cruiser') wType = 'plasma';
+                    else if (this.type === 'scarab') wType = 'polaron';
+                    else if (this.type === 'obsidian') wType = 'disruptor';
+                    else if (this.type === 'bio') wType = 'bio';
+                    else if (this.type === 'cube') wType = 'laser';
+
+                    SoundManager.enemyShoot(wType); 
+                    
+                    // Pass weapon type to Bullet constructor (last arg)
+                    bullets.push(new Bullet(this.x, this.y + 20, true, 0, 0, null, 4, wType));
                 }
 
                 if (this.y > canvas.height + 50) this.active = false;
@@ -2325,7 +2604,8 @@
                 else if (this.type === 'bio') {
                     // TRIARCH BROOD
                     c.scale(scale, scale);
-                    c.rotate(Math.PI); // Face down
+                    // Note: Bio ship was pre-rotated in art assets or drawing commands in other contexts,
+                    // but here we standardise.
                     const bioGrad = c.createRadialGradient(-6, -18, 4, 0, 0, 60);
                     bioGrad.addColorStop(0, "#ffe9cf");
                     bioGrad.addColorStop(0.4, "#d3955c");
@@ -2482,24 +2762,27 @@
                 this.phase = 0;
                 this.isBoss = true;
 
-                // DIFFICULTY ADJUSTMENT: Boss HP Reduced by 50%
+                // APPLY DIFFICULTY TO BOSS HP
+                let hpMult = gameDifficultySetting; // Bosses already scale hard, just apply setting
+
                 if (name === "Vigilant Raider") {
-                    this.hp = 150; this.maxHp = 150; this.scoreVal = 1000; 
+                    this.hp = 150 * hpMult; this.maxHp = this.hp; this.scoreVal = 1000; 
                     this.width = 160; this.height = 100; 
                 } else if (name === "Harvester Prime") {
-                    this.hp = 250; this.maxHp = 250; this.scoreVal = 2000; 
+                    this.hp = 250 * hpMult; this.maxHp = this.hp; this.scoreVal = 2000; 
                     this.width = 180; this.height = 100; 
                 } else if (name === "Lattice Matron") {
-                    this.hp = 400; this.maxHp = 400; this.scoreVal = 3000; 
+                    this.hp = 400 * hpMult; this.maxHp = this.hp; this.scoreVal = 3000; 
                     this.width = 100; this.height = 180; 
                 } else if (name === "Quantum Anomaly") {
-                    this.hp = 600; this.maxHp = 600; this.scoreVal = 5000; 
+                    this.hp = 600 * hpMult; this.maxHp = this.hp; this.scoreVal = 5000; 
+                    this.width = 200; this.height = 200; // Fixed visual size
                 } else if (name === "Obsidian Monarch") {
-                    this.hp = 750; this.maxHp = 750; this.scoreVal = 6000; 
+                    this.hp = 750 * hpMult; this.maxHp = this.hp; this.scoreVal = 6000; 
                     this.width = 200; this.height = 150; 
                 } else if (name === "Warlord Varlis") {
                     // BONUS BOSS
-                    this.hp = 1000; this.maxHp = 1000; this.scoreVal = 10000;
+                    this.hp = 1000 * hpMult; this.maxHp = this.hp; this.scoreVal = 10000;
                     this.width = 180; this.height = 140; 
                 }
             }
@@ -2517,43 +2800,44 @@
                 this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
 
                 const prog = Math.min(bossIndex, 5);
-                // DIFFICULTY ADJUSTMENT: Reduced Boss Fire Rate
-                let chance = 0.015 + (prog * 0.002); 
+                // APPLY DIFFICULTY TO BOSS FIRE RATE
+                let chance = (0.015 + (prog * 0.002)) * gameDifficultySetting; 
 
                 if (Math.random() < chance) {
                       if (this.name !== "Obsidian Monarch") {
-                        SoundManager.enemyShoot(); 
-                        bullets.push(new Bullet(this.x, this.y + this.height/2, true));
+                        // Default Boss Weapon logic
+                        let wType = 'standard';
+                        if (this.name === "Harvester Prime") wType = 'laser'; // Mining laser
+                        else if (this.name === "Lattice Matron") wType = 'laser';
+                        else if (this.name === "Quantum Anomaly") wType = 'plasma';
+
+                        SoundManager.enemyShoot(wType); 
+                        bullets.push(new Bullet(this.x, this.y + this.height/2, true, 0, 0, null, 4, wType));
                       }
                       
                       if (this.name === "Harvester Prime" || this.name === "Lattice Matron") {
-                          let b1 = new Bullet(this.x - 20, this.y + this.height/2, true);
-                          b1.vx = -2;
-                          let b2 = new Bullet(this.x + 20, this.y + this.height/2, true);
-                          b2.vx = 2;
+                          // FIXED: Dual Lasers now shoot DOWN-WARDS with a slight spread
+                          // vx = -1 (slightly left), vy = 6 (down fast)
+                          let b1 = new Bullet(this.x - 20, this.y + this.height/2, true, -1, 6, null, 6, 'laser');
+                          // vx = 1 (slightly right), vy = 6 (down fast)
+                          let b2 = new Bullet(this.x + 20, this.y + this.height/2, true, 1, 6, null, 6, 'laser');
                           bullets.push(b1, b2);
                       } 
                       else if (this.name === "Obsidian Monarch") {
-                          // NEW: Pink Diamond Shots
-                          SoundManager.enemyShoot();
-                          let b = new Bullet(this.x, this.y + this.height/2, true);
-                          b.isDiamond = true; 
-                          b.width = 12; // Large size
-                          b.color = '#f0f'; // Bright Pink
-                          b.vy = 6 + difficultyMultiplier; // Speed
+                          SoundManager.enemyShoot('disruptor');
+                          let b = new Bullet(this.x, this.y + this.height/2, true, 0, 0, null, 6, 'disruptor');
+                          b.vy = 6 + difficultyMultiplier; 
                           bullets.push(b);
 
-                          // NEW: Periodic Hunter Seeker Missiles
                           if (Math.random() < 0.15) {
-                              let m = new Rocket(this.x, this.y, true); // isEnemy = true
+                              let m = new Rocket(this.x, this.y, true); 
                               rockets.push(m);
                           }
                       }
                       else if (this.name === "Warlord Varlis") {
                           // Placeholder firing logic for Zarris
-                          SoundManager.enemyShoot();
-                          let b = new Bullet(this.x, this.y + this.height/2, true);
-                          b.color = '#0f0'; // Green plasma
+                          SoundManager.enemyShoot('polaron');
+                          let b = new Bullet(this.x, this.y + this.height/2, true, 0, 0, '#0f0', 4, 'polaron');
                           b.speed = 7;
                           bullets.push(b);
                       }
@@ -2747,14 +3031,14 @@
         function spawnEnemies() {
             if (bossActive || spawnDelay > 0) return; 
 
-            // DIFFICULTY ADJUSTMENT: Reduced Spawn Rate
-            // Base chance for random spawns (Reduced from 0.01)
-            if (Math.random() < 0.006 * difficultyMultiplier) {
+            // APPLY DIFFICULTY TO SPAWN RATE
+            // Base chance * time multiplier * game setting
+            if (Math.random() < (0.006 * difficultyMultiplier * gameDifficultySetting)) {
                  enemies.push(new Enemy(getRandomEnemyType()));
             }
             
-            // Chance for a Squad (Reduced from 0.005)
-            if (Math.random() < 0.003 * difficultyMultiplier) {
+            // Chance for a Squad
+            if (Math.random() < (0.003 * difficultyMultiplier * gameDifficultySetting)) {
                 spawnSquadron();
             }
         }
@@ -2873,11 +3157,13 @@
                     if (!hitBoss) {
                         enemies.forEach(e => {
                             if (!e.active || !b.active) return;
+                            // Improved hitbox for enemies
                             if (Math.abs(b.x - e.x) < e.width/2 && Math.abs(b.y - e.y) < e.height/2) {
                                 b.active = false;
                                 e.takeDamage(player.damage); 
                                 if (!e.active) {
                                     score += e.scoreVal;
+                                    // Higher difficulty yields more coins? Optional. kept standard.
                                     spawnCoins(e.x, e.y, e.type === 'cube' ? 5 : e.type === 'cruiser' ? 2 : 1);
                                     SoundManager.explode(); 
                                 }
@@ -2885,7 +3171,8 @@
                         });
                     }
                 } else {
-                    if (Math.abs(b.x - player.x) < player.width/2 - 10 && Math.abs(b.y - player.y) < player.height/2) {
+                    // Player hitbox logic
+                    if (Math.abs(b.x - player.x) < player.width/3 && Math.abs(b.y - player.y) < player.height/3) {
                         b.active = false;
                         player.takeDamage(10);
                         triggerShake(15, 10); 
@@ -3037,14 +3324,17 @@
             spawnCoins(currentBoss.x, currentBoss.y, 30); 
             
             // Check if we just defeated the Obsidian Monarch (Boss 5)
-            if (currentBoss.name === "Obsidian Monarch") {
+            if (currentBoss.name === "Obsidian Monarch" || currentBoss.name === "Void Empress") {
                 setTimeout(() => activateBonusLevel(), 1000); // Transform after 1s delay
             }
 
             bossActive = false;
             currentBoss = null;
             bossIndex++;
-            nextBossScore = score + 1000; 
+            
+            // PROGRESSIVE DIFFICULTY: Increase score gap by 500 for each boss defeated
+            // Boss 1: 1000 gap, Boss 2: 1500 gap, Boss 3: 2000 gap, etc.
+            nextBossScore = score + 1000 + (bossIndex * 500); 
             
             // REDUCED DELAY: Changed from 1200 (20s) to 180 (3s)
             spawnDelay = 180;
@@ -3184,17 +3474,29 @@
             document.getElementById('continue-section').classList.add('hidden');
             document.getElementById('final-options').classList.remove('hidden');
 
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('trek1942_highscore', highScore);
-                document.getElementById('highscore-display').innerText = `High: ${highScore}`;
+            // Get stored high score
+            let currentHigh = parseInt(localStorage.getItem('trek1942_highscore')) || 0;
+
+            if (score > currentHigh) {
+                currentHigh = score;
+                // Save Score AND Difficulty
+                localStorage.setItem('trek1942_highscore', currentHigh);
+                localStorage.setItem('trek1942_high_difficulty', getDifficultyName(gameDifficultySetting));
+                
+                document.getElementById('highscore-display').innerText = `High: ${currentHigh}`;
                 document.getElementById('new-highscore-msg').style.display = 'block';
+                // Update the text to show the new difficulty tag immediately
+                let diffName = getDifficultyName(gameDifficultySetting);
+                 document.getElementById('new-highscore-msg').innerHTML = `NEW HIGH SCORE! <span style="font-size:0.8em">(${diffName})</span>`;
             } else {
                 document.getElementById('new-highscore-msg').style.display = 'none';
             }
             
             document.getElementById('final-score').innerText = `Final Score: ${score}`;
-            document.getElementById('best-score').innerText = `High Score: ${highScore}`;
+            document.getElementById('best-score').innerText = `High Score: ${currentHigh}`;
+            
+            // Call Gemini AAR
+            getGeminiAAR(score, getDifficultyName(gameDifficultySetting), bossIndex);
         }
 
         // Continue Button Listener
@@ -3325,13 +3627,17 @@
             ctx.restore();
         }
 
-        document.getElementById('start-btn').addEventListener('click', () => {
+        // NEW START GAME FUNCTION
+        window.startGame = function(difficulty) {
+            gameDifficultySetting = difficulty;
             SoundManager.init(); 
             initGame();
             gameState = 'PLAYING';
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('ui-layer').classList.remove('hidden');
-        });
+        };
+
+        // Old start listener removed, replaced by inline onclick in HTML
 
         document.getElementById('restart-btn').addEventListener('click', () => {
             SoundManager.init(); 
@@ -3344,6 +3650,7 @@
         // New Listener for Home Button
         document.getElementById('home-btn').addEventListener('click', () => {
             gameState = 'START'; // Reset state logic
+            updateStartScreenScore(); // Update score display
             document.getElementById('game-over-screen').classList.add('hidden');
             document.getElementById('start-screen').classList.remove('hidden');
             // UI Layer is already hidden by endGame()
@@ -3352,6 +3659,10 @@
         // Initialize stars/planets for background
         for(let i=0; i<150; i++) stars.push(new Star());
         for(let i=0; i<3; i++) planets.push(new Planet());
+        
+        // Initial Score Check
+        updateStartScreenScore();
+        
         gameLoop();
 
     </script>
