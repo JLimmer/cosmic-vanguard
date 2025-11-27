@@ -571,43 +571,6 @@
         .hidden {
             display: none !important;
         }
-        
-        /* After Action Report Style */
-        #aar-container {
-            margin-top: 10px;
-            background: rgba(0, 20, 40, 0.7);
-            border: 1px solid #00d4ff;
-            padding: 10px;
-            border-radius: 8px;
-            max-width: 85%;
-            min-height: 50px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        #aar-title {
-            color: #00d4ff;
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-        
-        #aar-text {
-            color: #fff;
-            font-style: italic;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        .typing {
-            border-right: 2px solid #00d4ff;
-            animation: blink-cursor 0.7s step-end infinite;
-        }
-        
-        @keyframes blink-cursor { 50% { border-color: transparent; } }
 
         /* Continue Screen Styles */
         #continue-timer {
@@ -623,6 +586,24 @@
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.1); opacity: 0.8; }
             100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* After Action Report Styles */
+        #aar-container {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            padding: 10px;
+            width: 90%;
+            max-width: 400px;
+            color: #fff;
+            font-style: italic;
+            font-size: 13px;
+            line-height: 1.4;
+            display: none; /* Hidden until generated */
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
         }
 
         /* LCARS decorative bars */
@@ -653,7 +634,8 @@
             </div>
             <div class="hud-row" style="justify-content: space-between; margin-top: 5px; padding: 0 5px;">
                 <div id="latinum-display" style="color: #ffcc00; font-weight: bold;">Credits: 0</div>
-                <div id="health-display">Shields: 100%</div>
+                <!-- UPDATED: Shield Display (Numerical) -->
+                <div id="health-display">Shields: 100/100</div>
             </div>
             
             <div class="status-container">
@@ -711,6 +693,8 @@
         <div id="pause-text">SIMULATION PAUSED</div>
         <button id="resume-btn" class="btn">RESUME</button>
         <button id="mute-btn-pause" class="btn btn-secondary" style="margin-top: 20px;">Toggle Sound</button>
+        <!-- NEW: Return to Main Menu -->
+        <button id="pause-home-btn" class="btn btn-tertiary" style="margin-top: 20px;">Return to Base</button>
     </div>
     
     <!-- Instructions Screen -->
@@ -744,15 +728,17 @@
         <div id="current-latinum">Credits: 0</div>
         <div class="upgrade-grid">
             <div class="upgrade-card">
-                <div class="upgrade-name">Hull Repair</div>
+                <!-- UPDATED: Name and Description -->
+                <div class="upgrade-name">Shield Recharge</div>
                 <div class="upgrade-cost">Cost: 50</div>
-                <div style="color:#ccc; font-size:12px; margin-bottom:5px;">Restores 50 HP</div>
+                <div style="color:#ccc; font-size:12px; margin-bottom:5px;">Restore +50 SR</div>
                 <button class="upgrade-buy-btn" onclick="buyUpgrade('repair', 50)">FABRICATE</button>
             </div>
             <div class="upgrade-card">
                 <div class="upgrade-name">Shield Harmonics</div>
                 <div class="upgrade-cost">Cost: 100</div>
-                <div style="color:#ccc; font-size:12px; margin-bottom:5px;">+20 Max Shields</div>
+                <!-- UPDATED: Description -->
+                <div style="color:#ccc; font-size:12px; margin-bottom:5px;">+20 Max Shield Resistance</div>
                 <button class="upgrade-buy-btn" onclick="buyUpgrade('maxhp', 100)">FABRICATE</button>
             </div>
             <div class="upgrade-card">
@@ -775,13 +761,17 @@
         <h1>Cosmic Vanguard</h1>
         <p>Command the Vanguard Starship.</p>
         
-        <!-- NEW: Start Screen High Score -->
-        <p id="start-highscore" style="margin-top: 5px; font-size: 12px; min-height: 20px;"></p>
+        <!-- NEW: High Scores Table -->
+        <div id="highscore-container" style="margin-top:15px; text-align:center;">
+            <div style="color:#28a745; font-size:12px;">EASY RECORD: <span id="score-easy" style="font-weight:bold; color:#fff;">0</span></div>
+            <div style="color:#ffc107; font-size:12px;">MEDIUM RECORD: <span id="score-medium" style="font-weight:bold; color:#fff;">0</span></div>
+            <div style="color:#dc3545; font-size:12px;">HARD RECORD: <span id="score-hard" style="font-weight:bold; color:#fff;">0</span></div>
+        </div>
         
         <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px; width: 100%; max-width: 250px;">
-            <button class="btn btn-easy" onclick="startGame(1.0)">EASY</button>
-            <button class="btn btn-medium" onclick="startGame(2.0)">MEDIUM</button>
-            <button class="btn btn-hard" onclick="startGame(3.5)">HARD</button>
+            <button class="btn btn-easy" onclick="startGame('EASY')">EASY</button>
+            <button class="btn btn-medium" onclick="startGame('MEDIUM')">MEDIUM</button>
+            <button class="btn btn-hard" onclick="startGame('HARD')">HARD</button>
         </div>
 
         <div style="display:flex; gap:10px; margin-top:15px;">
@@ -790,11 +780,11 @@
         </div>
     </div>
 
-    <div id="game-over-screen" class="hidden">
+    <div id="game-over-screen" class="hidden" style="text-align: center;">
         <h1 id="game-over-title">System Critical</h1>
         
         <!-- Continue Section -->
-        <div id="continue-section">
+        <div id="continue-section" style="display: flex; flex-direction: column; align-items: center;">
             <p style="color: #ccc; font-size: 18px;">Systems Failing...</p>
             <div id="continue-timer">15</div>
             <button class="btn" id="continue-btn">EMERGENCY RESTART</button>
@@ -802,23 +792,28 @@
         </div>
 
         <!-- Final Game Over Section -->
-        <div id="final-options" class="hidden">
-            <p id="final-score">Score: 0</p>
-            <p id="best-score" style="color: #888; margin-top: 5px;">High Score: 0</p>
-            <p id="new-highscore-msg" style="color: #ffcc00; font-weight: bold; display: none;">NEW HIGH SCORE!</p>
+        <div id="final-options" class="hidden" style="display: flex; flex-direction: column; align-items: center;">
+            <p id="final-score" style="font-size: 24px; color: #fff; margin-bottom: 5px;">Score: 0</p>
             
-            <!-- Gemini AAR Container -->
-            <div id="aar-container">
-                <div id="aar-title">Fleet Command Analysis</div>
-                <div id="aar-text">Subspace signal incoming...</div>
-            </div>
-
+            <!-- NEW: After Action Report Box -->
+            <div id="aar-container">Generating Performance Review...</div>
+            
+            <p id="best-score" style="color: #888; margin-top: 5px;">High Score: 0</p>
+            <p id="new-highscore-msg" style="color: #ffcc00; font-weight: bold; display: none; margin-bottom: 15px;">NEW HIGH SCORE!</p>
             <button class="btn" id="restart-btn">Re-Initialize</button>
             <button class="btn btn-tertiary" id="home-btn" style="margin-top: 15px;">Return to Base</button>
         </div>
     </div>
 
     <script>
+        // --- CONFIGURATION OBJECT ---
+        const DIFFICULTY_SETTINGS = {
+            EASY:   { hp: 1.0, fire: 1.0, spawn: 1.0, score: 1.0, label: "EASY" },
+            MEDIUM: { hp: 2.0, fire: 3.0, spawn: 1.5, score: 1.5, label: "MEDIUM" },
+            HARD:   { hp: 3.5, fire: 6.0, spawn: 1.5, score: 3.0, label: "HARD" } 
+        };
+        let currentSettings = DIFFICULTY_SETTINGS.EASY;
+
         // --- Helper function for drawing glow dots ---
         function glowDot(ctx, x, y, radius, color, glowColor) {
             ctx.save();
@@ -834,7 +829,7 @@
         // --- Gemini API Config ---
         const apiKey = "AIzaSyBm2vuGROBLUjjQpKEDkEEE5V1Uy-5RqNM"; // Provided by environment at runtime
 
-        // Game Difficulty Setting (1.0 = Easy, 2.0 = Medium, 3.5 = Hard)
+        // Game Difficulty Setting (1.0 = Easy, 1.5 = Medium, 1.75 = Hard)
         let gameDifficultySetting = 1.0;
         
         // Helper to get difficulty name
@@ -846,24 +841,13 @@
 
         // Helper to update start screen text
         function updateStartScreenScore() {
-            const el = document.getElementById('start-highscore');
-            const currentHigh = parseInt(localStorage.getItem('trek1942_highscore')) || 0;
-            const highDiff = localStorage.getItem('trek1942_high_difficulty') || "EASY";
+            const easy = localStorage.getItem('trek1942_highscore_EASY') || 0;
+            const medium = localStorage.getItem('trek1942_highscore_MEDIUM') || 0;
+            const hard = localStorage.getItem('trek1942_highscore_HARD') || 0;
             
-            if (currentHigh > 0) {
-                let diffColor = "#28a745"; // Green
-                if (highDiff === "MEDIUM") diffColor = "#ffc107"; // Orange
-                if (highDiff === "HARD") diffColor = "#dc3545"; // Red
-
-                el.innerHTML = `Current Record: <span style="color:#00d4ff; font-weight:bold;">${currentHigh}</span> <span style="color:${diffColor}; font-size:10px; vertical-align:middle; border:1px solid ${diffColor}; padding:1px 3px; border-radius:3px;">${highDiff}</span>`;
-                el.style.color = "#ccc";
-                el.style.fontStyle = "normal";
-            } else {
-                el.innerText = "Captain on deck. Set a new fleet record!";
-                el.style.color = "#888";
-                el.style.fontWeight = "normal";
-                el.style.fontStyle = "italic";
-            }
+            document.getElementById('score-easy').innerText = easy;
+            document.getElementById('score-medium').innerText = medium;
+            document.getElementById('score-hard').innerText = hard;
         }
 
         async function getGeminiTaunt(bossName) {
@@ -894,26 +878,21 @@
             }
         }
 
-        // ✨ NEW: Gemini After Action Report
-        async function getGeminiAAR(score, difficultyName, bossIndex) {
-             if (!apiKey) {
-                document.getElementById('aar-text').innerText = "Communication link offline. No fleet data available.";
+        // NEW: After Action Report Function
+        async function getGeminiReport(score, difficulty) {
+            const container = document.getElementById('aar-container');
+            
+            if (!apiKey) {
+                container.innerText = "Fleet Command link offline.";
+                container.style.display = 'block';
                 return;
             }
 
-            const bossDefeatedCount = bossIndex; 
-            const prompt = `You are a sci-fi Fleet Admiral debriefing a pilot after their ship was destroyed.
-            Performance Data:
-            - Score: ${score}
-            - Difficulty: ${difficultyName}
-            - Bosses Defeated: ${bossDefeatedCount}
-            
-            Write a 2-sentence performance review. Be encouraging if the score is high (>5000), stern/disappointed if low (<1000). Use sci-fi terminology. Do not use quotes.`;
+            container.innerText = "Incoming transmission from Command...";
+            container.style.display = 'block';
 
+            const prompt = `You are a cynical Space Fleet Commander reviewing a failed mission report. The pilot scored ${score} points on ${difficulty} difficulty. Write a 1-sentence performance review critique. Be tough but fair.`;
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            
-            document.getElementById('aar-text').innerText = "Decrypting transmission...";
-            document.getElementById('aar-text').classList.add('typing');
 
             try {
                 const response = await fetch(url, {
@@ -925,15 +904,11 @@
                 });
 
                 const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Transmission garbled. Report to the bridge.";
-                
-                document.getElementById('aar-text').classList.remove('typing');
-                document.getElementById('aar-text').innerText = text;
-                
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Mission failed. Return to base immediately.";
+                container.innerText = `COMMAND REVIEW: "${text}"`;
             } catch (error) {
-                console.error("Gemini AAR Error:", error);
-                document.getElementById('aar-text').classList.remove('typing');
-                document.getElementById('aar-text').innerText = "Signal lost. Data corrupted.";
+                console.error("Gemini Error:", error);
+                container.innerText = "Command link disrupted.";
             }
         }
 
@@ -1060,6 +1035,7 @@
                     // Borg Cutting Beam - Mechanical
                     osc.type = 'sawtooth';
                     osc.frequency.setValueAtTime(100, now);
+                    // Just holding the frequency constant is default behavior if no ramps are added.
                     gain.gain.setValueAtTime(0.05, now);
                     gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
                     osc.start();
@@ -1383,31 +1359,19 @@
                 // 2. Draw Ship
                 const c = cvs.getContext('2d');
                 
-                // Force center coordinate drawing without translation hacks
-                // Just draw at center (width/2, height/2)
-                const centerX = cvs.width / 2;
-                const centerY = cvs.height / 2;
-
                 if (isBoss) {
                     const dummy = new Boss(item.name);
-                    // Override coordinates to center
-                    dummy.x = centerX;
-                    dummy.y = centerY;
-                    
-                    // Scale down for preview
+                    dummy.x = cvs.width / 2; 
+                    dummy.y = cvs.height / 2;
+                    // Force a smaller scale for the preview so it fits
                     c.save();
-                    c.translate(centerX, centerY);
-                    c.scale(0.6, 0.6);
-                    c.translate(-centerX, -centerY);
+                    c.scale(0.6, 0.6); // Scale the context before drawing
+                    // Adjust center for scaling
+                    c.translate((cvs.width/2) * (1/0.6) - dummy.x, (cvs.height/2) * (1/0.6) - dummy.y);
                     dummy.draw(c);
                     c.restore();
                 } else {
-                    const dummy = new Enemy(item.type, centerX, centerY);
-                    // Override to center just in case
-                    dummy.x = centerX;
-                    dummy.y = centerY;
-                    
-                    // Enemy draw handles its own scaling but let's ensure it draws at x,y
+                    const dummy = new Enemy(item.type, cvs.width/2, cvs.height/2);
                     dummy.draw(c);
                 }
 
@@ -1424,6 +1388,7 @@
                 const statsDiv = document.createElement('div');
                 statsDiv.className = 'enemy-stats';
                 if(isBoss) statsDiv.style.color = '#ff9900';
+                // Scale displayed HP by Easy setting
                 statsDiv.innerText = `HP: ${item.hp} | SCORE: ${item.score}`;
 
                 // 4. Assemble Card
@@ -2425,44 +2390,44 @@
                 this.swing = Math.random() * 0.05;
                 
                 // APPLY DIFFICULTY TO HP
-                let hpMult = difficultyMultiplier * gameDifficultySetting;
+                let hpMult = difficultyMultiplier * gameDifficultySetting.hp;
 
                 // Stats based on Type
                 if (type === 'cube') { // Tier 5 Tank (Borg Cube)
                     this.hp = 8 * hpMult; 
                     this.width = 80;
                     this.height = 80;
-                    this.scoreVal = 150;
+                    this.scoreVal = 150 * gameDifficultySetting.score;
                     this.vy = 0.5 + (difficultyMultiplier * 0.1);
                 } else if (type === 'bio') { // Tier 4 Erratic (Species 8472)
                     this.hp = 4 * hpMult; 
                     this.width = 40;
                     this.height = 55;
-                    this.scoreVal = 120;
+                    this.scoreVal = 120 * gameDifficultySetting.score;
                     this.vy = 3 + (difficultyMultiplier * 0.5); 
                     this.swing = 0.2; 
                 } else if (type === 'obsidian') { // Tier 2 Tank (Cardassian)
                     this.hp = 3 * hpMult; 
                     this.width = 60;
                     this.height = 70;
-                    this.scoreVal = 80;
+                    this.scoreVal = 80 * gameDifficultySetting.score;
                     this.vy = 1.2 + (difficultyMultiplier * 0.1); 
                 } else if (type === 'scarab') { // Tier 3 Swarmer (Jem'Hadar)
                     this.hp = 2 * hpMult; 
                     this.width = 35;
                     this.height = 40;
-                    this.scoreVal = 60;
+                    this.scoreVal = 60 * gameDifficultySetting.score;
                     this.vy = 2.5 + (difficultyMultiplier * 0.2); 
                 } else if (type === 'cruiser') { // Tier 1 Heavy (Romulan Warbird)
                     this.hp = 2 * hpMult; 
                     this.width = 72;
                     this.height = 48;
-                    this.scoreVal = 50;
+                    this.scoreVal = 50 * gameDifficultySetting.score;
                 } else { // Tier 1 Light (Klingon BoP)
                     this.hp = 1 * hpMult; 
                     this.width = 48;
                     this.height = 48;
-                    this.scoreVal = 10;
+                    this.scoreVal = 10 * gameDifficultySetting.score;
                 }
             }
 
@@ -2477,9 +2442,11 @@
                 }
 
                 const prog = Math.min(bossIndex, 5);
-                // APPLY DIFFICULTY TO FIRE RATE
-                // Base chance * Diff Multiplier * Game Setting
-                const baseChance = (0.0008 + (prog * 0.0002)) * gameDifficultySetting;
+                // DIFFICULTY ADJUSTMENT: SIGNIFICANTLY INCREASED FIRE RATE
+                // We define a multiplier specifically for shooting frequency
+                const fireFreq = gameDifficultySetting.fire;
+                // Base chance increased slightly (0.001) + progression
+                const baseChance = (0.0008 + (prog * 0.0002)) * fireFreq;
 
                 if (Math.random() < baseChance * difficultyMultiplier) {
                     // DETERMINE WEAPON TYPE BASED ON SHIP TYPE
@@ -2604,8 +2571,7 @@
                 else if (this.type === 'bio') {
                     // TRIARCH BROOD
                     c.scale(scale, scale);
-                    // Note: Bio ship was pre-rotated in art assets or drawing commands in other contexts,
-                    // but here we standardise.
+                    c.rotate(Math.PI); // Face down
                     const bioGrad = c.createRadialGradient(-6, -18, 4, 0, 0, 60);
                     bioGrad.addColorStop(0, "#ffe9cf");
                     bioGrad.addColorStop(0.4, "#d3955c");
@@ -2763,26 +2729,26 @@
                 this.isBoss = true;
 
                 // APPLY DIFFICULTY TO BOSS HP
-                let hpMult = gameDifficultySetting; // Bosses already scale hard, just apply setting
+                let hpMult = gameDifficultySetting.hp; // Bosses already scale hard, just apply setting
 
                 if (name === "Vigilant Raider") {
-                    this.hp = 150 * hpMult; this.maxHp = this.hp; this.scoreVal = 1000; 
+                    this.hp = 150 * hpMult; this.maxHp = this.hp; this.scoreVal = 1000 * gameDifficultySetting.score; 
                     this.width = 160; this.height = 100; 
                 } else if (name === "Harvester Prime") {
-                    this.hp = 250 * hpMult; this.maxHp = this.hp; this.scoreVal = 2000; 
+                    this.hp = 250 * hpMult; this.maxHp = this.hp; this.scoreVal = 2000 * gameDifficultySetting.score; 
                     this.width = 180; this.height = 100; 
                 } else if (name === "Lattice Matron") {
-                    this.hp = 400 * hpMult; this.maxHp = this.hp; this.scoreVal = 3000; 
+                    this.hp = 400 * hpMult; this.maxHp = this.hp; this.scoreVal = 3000 * gameDifficultySetting.score; 
                     this.width = 100; this.height = 180; 
                 } else if (name === "Quantum Anomaly") {
-                    this.hp = 600 * hpMult; this.maxHp = this.hp; this.scoreVal = 5000; 
+                    this.hp = 600 * hpMult; this.maxHp = this.hp; this.scoreVal = 5000 * gameDifficultySetting.score; 
                     this.width = 200; this.height = 200; // Fixed visual size
                 } else if (name === "Obsidian Monarch") {
-                    this.hp = 750 * hpMult; this.maxHp = this.hp; this.scoreVal = 6000; 
+                    this.hp = 750 * hpMult; this.maxHp = this.hp; this.scoreVal = 6000 * gameDifficultySetting.score; 
                     this.width = 200; this.height = 150; 
                 } else if (name === "Warlord Varlis") {
                     // BONUS BOSS
-                    this.hp = 1000 * hpMult; this.maxHp = this.hp; this.scoreVal = 10000;
+                    this.hp = 1000 * hpMult; this.maxHp = this.hp; this.scoreVal = 10000 * gameDifficultySetting.score;
                     this.width = 180; this.height = 140; 
                 }
             }
@@ -2800,8 +2766,9 @@
                 this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
 
                 const prog = Math.min(bossIndex, 5);
-                // APPLY DIFFICULTY TO BOSS FIRE RATE
-                let chance = (0.015 + (prog * 0.002)) * gameDifficultySetting; 
+                // DIFFICULTY ADJUSTMENT: Boss Aggression
+                let fireFreq = gameDifficultySetting.fire;
+                let chance = (0.015 + (prog * 0.002)) * fireFreq; 
 
                 if (Math.random() < chance) {
                       if (this.name !== "Obsidian Monarch") {
@@ -3027,50 +2994,38 @@
 
         // --- Game Logic Functions ---
 
-        // IMPROVEMENT 2: Formations / Squads
         function spawnEnemies() {
             if (bossActive || spawnDelay > 0) return; 
 
-            // APPLY DIFFICULTY TO SPAWN RATE
-            // Base chance * time multiplier * game setting
-            if (Math.random() < (0.006 * difficultyMultiplier * gameDifficultySetting)) {
+            if (Math.random() < (0.006 * difficultyMultiplier * gameDifficultySetting.spawn)) {
                  enemies.push(new Enemy(getRandomEnemyType()));
             }
             
-            // Chance for a Squad
-            if (Math.random() < (0.003 * difficultyMultiplier * gameDifficultySetting)) {
+            if (Math.random() < (0.003 * difficultyMultiplier * gameDifficultySetting.spawn)) {
                 spawnSquadron();
             }
         }
         
         function getRandomEnemyType() {
             const rand = Math.random();
-            
-            // Phase 1: Early Game (0-1 Bosses defeated)
             if (bossIndex < 2) {
-                // Small chance to see a Cube early (Level 2)
                 if (bossIndex === 1 && rand > 0.97) return 'cube'; 
                 if (bossIndex === 1 && rand > 0.90) return 'obsidian';
                 return rand > 0.7 ? 'cruiser' : 'scout';
             }
-            
-            // Phase 2: Mid Game (2-3 Bosses defeated)
             if (bossIndex < 4) {
-                if (rand > 0.90) return 'cube';     // 10% chance (Lattice Node)
-                if (rand > 0.75) return 'obsidian'; // 15% chance (Sable Dominion)
-                if (rand > 0.30) return 'scarab';   // 45% chance (Shard Legion)
-                return 'cruiser';                   // 30% chance
+                if (rand > 0.90) return 'cube';     
+                if (rand > 0.75) return 'obsidian'; 
+                if (rand > 0.30) return 'scarab';   
+                return 'cruiser';                   
             }
-            
-            // Phase 3: Late Game (4+ Bosses defeated)
-            if (rand > 0.80) return 'cube';     // 20% chance (Increased from 10%)
-            if (rand > 0.60) return 'bio';      // 20% chance (Triarch Brood)
-            if (rand > 0.30) return 'obsidian'; // 30% chance
-            return 'scarab';                    // 30% chance
+            if (rand > 0.80) return 'cube';     
+            if (rand > 0.60) return 'bio';      
+            if (rand > 0.30) return 'obsidian'; 
+            return 'scarab';                    
         }
         
         function spawnSquadron() {
-            // Squads can now be Scouts or Scarabs depending on difficulty
             const type = (bossIndex > 2 && Math.random() > 0.5) ? 'scarab' : 'scout';
             const pattern = Math.random() > 0.5 ? 'V' : 'LINE';
             const startX = Math.random() * (canvas.width - 200) + 100;
@@ -3104,7 +3059,6 @@
                 
                 getGeminiTaunt(name);
                 
-                // BONUS LEVEL TRIGGER
                 if (name === "Warlord Varlis") {
                     activateBonusLevel();
                 }
@@ -3112,17 +3066,11 @@
         }
         
         function activateBonusLevel() {
-            // Transform Player Logic
             player.isProtector = true;
-            // Full heal for the bonus round
             player.hp = player.maxHp; 
             updateHealth();
-            
-            // Visual Flare
             showComms("COMMAND", "SIGMA 13 ACTIVATED. SHIP RECONFIGURING.");
             triggerShake(20, 5);
-            
-            // Could change background or music here in future
         }
         
         function updateBossUI(boss) {
@@ -3138,7 +3086,6 @@
         }
 
         function checkCollisions() {
-            // 1. Bullets
             bullets.forEach(b => {
                 if (!b.active) return;
                 
@@ -3157,13 +3104,11 @@
                     if (!hitBoss) {
                         enemies.forEach(e => {
                             if (!e.active || !b.active) return;
-                            // Improved hitbox for enemies
                             if (Math.abs(b.x - e.x) < e.width/2 && Math.abs(b.y - e.y) < e.height/2) {
                                 b.active = false;
                                 e.takeDamage(player.damage); 
                                 if (!e.active) {
                                     score += e.scoreVal;
-                                    // Higher difficulty yields more coins? Optional. kept standard.
                                     spawnCoins(e.x, e.y, e.type === 'cube' ? 5 : e.type === 'cruiser' ? 2 : 1);
                                     SoundManager.explode(); 
                                 }
@@ -3171,7 +3116,6 @@
                         });
                     }
                 } else {
-                    // Player hitbox logic
                     if (Math.abs(b.x - player.x) < player.width/3 && Math.abs(b.y - player.y) < player.height/3) {
                         b.active = false;
                         player.takeDamage(10);
@@ -3181,25 +3125,21 @@
                 }
             });
 
-            // 2. Rockets
             rockets.forEach(r => {
                 if (!r.active) return;
                 
-                // NEW: Enemy Rocket hitting Player
                 if (r.isEnemy) {
                     if (Math.hypot(r.x - player.x, r.y - player.y) < player.width/2 + 5) {
                         r.active = false;
-                        player.takeDamage(20); // Heavy damage
+                        player.takeDamage(20); 
                         triggerShake(15, 10); 
                         SoundManager.explode(); 
                         updateHealth();
-                        // Particle explosion
                         for(let i=0; i<8; i++) particles.push(new Particle(r.x, r.y, '#d0f'));
                     }
-                    return; // Skip enemy checks for enemy rockets
+                    return; 
                 }
 
-                // Player Rocket Logic (Hitting Boss/Enemies)
                 let hitBoss = false;
                 if (bossActive && currentBoss) {
                      if (Math.hypot(r.x - currentBoss.x, r.y - currentBoss.y) < currentBoss.width/2) {
@@ -3231,7 +3171,6 @@
                 }
             });
 
-            // 3. Mines
             mines.forEach(m => {
                 if (!m.active) return;
                 
@@ -3268,7 +3207,6 @@
 
             document.getElementById('score-display').innerText = `Score: ${score}`;
 
-            // Boss vs Player
             if (bossActive && currentBoss) {
                  if (Math.abs(currentBoss.x - player.x) < (player.width + currentBoss.width)/2.5 && Math.abs(currentBoss.y - player.y) < (player.height + currentBoss.height)/2.5) {
                      player.takeDamage(5); 
@@ -3277,7 +3215,6 @@
                  }
             }
 
-            // Enemies vs Player
             enemies.forEach(e => {
                 if (!e.active) return;
                 if (Math.abs(e.x - player.x) < (player.width + e.width)/3 && Math.abs(e.y - player.y) < (player.height + e.height)/3) {
@@ -3289,7 +3226,6 @@
                 }
             });
             
-            // Upgrades
             upgrades.forEach(u => {
                 if (!u.active) return;
                 const dx = player.x - u.x;
@@ -3302,7 +3238,6 @@
                 }
             });
             
-            // Coins
             coins.forEach(c => {
                 if (!c.active) return;
                 const dx = player.x - c.x;
@@ -3323,20 +3258,15 @@
             score += currentBoss.scoreVal;
             spawnCoins(currentBoss.x, currentBoss.y, 30); 
             
-            // Check if we just defeated the Obsidian Monarch (Boss 5)
             if (currentBoss.name === "Obsidian Monarch" || currentBoss.name === "Void Empress") {
-                setTimeout(() => activateBonusLevel(), 1000); // Transform after 1s delay
+                setTimeout(() => activateBonusLevel(), 1000); 
             }
 
             bossActive = false;
             currentBoss = null;
             bossIndex++;
             
-            // PROGRESSIVE DIFFICULTY: Increase score gap by 500 for each boss defeated
-            // Boss 1: 1000 gap, Boss 2: 1500 gap, Boss 3: 2000 gap, etc.
             nextBossScore = score + 1000 + (bossIndex * 500); 
-            
-            // REDUCED DELAY: Changed from 1200 (20s) to 180 (3s)
             spawnDelay = 180;
             
             document.getElementById('boss-hud').style.display = 'none';
@@ -3381,7 +3311,6 @@
             difficultyMultiplier = 1;
             spawnDelay = 0; 
             
-            // Reset Lives on Fresh Start
             livesRemaining = 3;
             
             bossActive = false;
@@ -3406,7 +3335,6 @@
             player.y = canvas.height - 100;
             player.targetX = player.x;
             player.targetY = player.y;
-            // Ensure player starts as normal ship
             player.isProtector = false;
             
             updateUltimateUI();
@@ -3426,7 +3354,6 @@
             document.getElementById('ui-layer').classList.add('hidden');
             document.getElementById('boss-hud').style.display = 'none';
 
-            // Check if we have lives left
             if (livesRemaining > 0) {
                 startContinuePhase();
             } else {
@@ -3472,70 +3399,34 @@
             
             document.getElementById('game-over-title').innerText = "MISSION FAILED";
             document.getElementById('continue-section').classList.add('hidden');
-            document.getElementById('final-options').classList.remove('hidden');
+            
+            // Remove hidden class, but ensure flex display for alignment
+            const finalOpt = document.getElementById('final-options');
+            finalOpt.classList.remove('hidden');
+            finalOpt.style.display = 'flex'; 
 
-            // Get stored high score
-            let currentHigh = parseInt(localStorage.getItem('trek1942_highscore')) || 0;
+            // Get stored high score for CURRENT difficulty
+            const diffKey = `trek1942_highscore_${currentSettings.label}`;
+            let currentHigh = parseInt(localStorage.getItem(diffKey)) || 0;
 
             if (score > currentHigh) {
                 currentHigh = score;
-                // Save Score AND Difficulty
-                localStorage.setItem('trek1942_highscore', currentHigh);
-                localStorage.setItem('trek1942_high_difficulty', getDifficultyName(gameDifficultySetting));
+                localStorage.setItem(diffKey, currentHigh);
                 
-                document.getElementById('highscore-display').innerText = `High: ${currentHigh}`;
                 document.getElementById('new-highscore-msg').style.display = 'block';
-                // Update the text to show the new difficulty tag immediately
-                let diffName = getDifficultyName(gameDifficultySetting);
-                 document.getElementById('new-highscore-msg').innerHTML = `NEW HIGH SCORE! <span style="font-size:0.8em">(${diffName})</span>`;
+                document.getElementById('new-highscore-msg').innerHTML = `NEW ${currentSettings.label} RECORD!`;
             } else {
                 document.getElementById('new-highscore-msg').style.display = 'none';
             }
             
             document.getElementById('final-score').innerText = `Final Score: ${score}`;
-            document.getElementById('best-score').innerText = `High Score: ${currentHigh}`;
-            
-            // Call Gemini AAR
-            getGeminiAAR(score, getDifficultyName(gameDifficultySetting), bossIndex);
+            document.getElementById('best-score').innerText = `${currentSettings.label} Record: ${currentHigh}`;
+
+            // Trigger Gemini Report
+            getGeminiReport(score, currentSettings.label);
         }
 
-        // Continue Button Listener
-        document.getElementById('continue-btn').addEventListener('click', () => {
-            if (continueInterval) clearInterval(continueInterval);
-            livesRemaining--;
-            
-            // Respawn Logic
-            gameState = 'PLAYING';
-            document.getElementById('game-over-screen').classList.add('hidden');
-            document.getElementById('ui-layer').classList.remove('hidden');
-            
-            // Restore Boss HUD if Active
-            if (bossActive && currentBoss) {
-                document.getElementById('boss-hud').style.display = 'flex';
-            }
-            
-            // 1. Heal Player
-            player.hp = player.maxHp;
-            player.active = true;
-            player.x = canvas.width / 2;
-            player.y = canvas.height - 100;
-            player.targetX = player.x;
-            player.targetY = player.y;
-            
-            // 2. Grant temporary invincibility (3 seconds)
-            player.invincible = true;
-            setTimeout(() => {
-                if(player) player.invincible = false;
-            }, 3000);
-
-            // 3. Clear immediate threats (Optional but fair)
-            bullets = []; // Clear all bullets
-            enemies.forEach(e => e.takeDamage(500)); // Nuke screen slightly
-            
-            updateHealth();
-            SoundManager.powerup(); // Play a sound for respawn
-        });
-
+        // --- GAME LOOP ---
         function gameLoop() {
             requestAnimationFrame(gameLoop);
 
@@ -3558,13 +3449,11 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Draw Warp Stars
             stars.forEach(s => {
                 s.update();
                 s.draw();
             });
             
-            // Draw Planets
             planets.forEach(p => {
                 p.update();
                 p.draw();
@@ -3627,18 +3516,69 @@
             ctx.restore();
         }
 
-        // NEW START GAME FUNCTION
-        window.startGame = function(difficulty) {
-            gameDifficultySetting = difficulty;
+        // Start Loop Immediately
+        gameLoop();
+        
+        // --- GLOBAL START GAME FUNCTION ---
+        window.startGame = function(difficultyKey) {
+            currentSettings = DIFFICULTY_SETTINGS[difficultyKey];
+            gameDifficultySetting = currentSettings; 
             SoundManager.init(); 
             initGame();
             gameState = 'PLAYING';
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('ui-layer').classList.remove('hidden');
         };
+        
+        // --- EVENT LISTENERS ---
+        document.getElementById('continue-btn').addEventListener('click', () => {
+            if (continueInterval) clearInterval(continueInterval);
+            livesRemaining--;
+            
+            gameState = 'PLAYING';
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('hidden');
+            
+            if (bossActive && currentBoss) {
+                document.getElementById('boss-hud').style.display = 'flex';
+            }
+            
+            player.hp = player.maxHp;
+            player.active = true;
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 100;
+            player.targetX = player.x;
+            player.targetY = player.y;
+            
+            player.invincible = true;
+            setTimeout(() => {
+                if(player) player.invincible = false;
+            }, 3000);
 
-        // Old start listener removed, replaced by inline onclick in HTML
+            bullets = []; 
+            enemies.forEach(e => e.takeDamage(500)); 
+            
+            updateHealth();
+            SoundManager.powerup(); 
+        });
 
+        document.getElementById('home-btn').addEventListener('click', () => {
+            gameState = 'START'; 
+            updateStartScreenScore();
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.add('hidden'); // Hide Game UI
+            document.getElementById('start-screen').classList.remove('hidden');
+        });
+
+        document.getElementById('pause-home-btn').addEventListener('click', () => {
+            gameState = 'START'; 
+            updateStartScreenScore();
+            document.getElementById('pause-screen').style.display = 'none';
+            document.getElementById('ui-layer').classList.add('hidden'); // Hide Game UI
+            document.getElementById('start-screen').classList.remove('hidden');
+            if(audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+        });
+        
         document.getElementById('restart-btn').addEventListener('click', () => {
             SoundManager.init(); 
             initGame();
@@ -3646,24 +3586,12 @@
             document.getElementById('game-over-screen').classList.add('hidden');
             document.getElementById('ui-layer').classList.remove('hidden');
         });
-        
-        // New Listener for Home Button
-        document.getElementById('home-btn').addEventListener('click', () => {
-            gameState = 'START'; // Reset state logic
-            updateStartScreenScore(); // Update score display
-            document.getElementById('game-over-screen').classList.add('hidden');
-            document.getElementById('start-screen').classList.remove('hidden');
-            // UI Layer is already hidden by endGame()
-        });
 
         // Initialize stars/planets for background
         for(let i=0; i<150; i++) stars.push(new Star());
         for(let i=0; i<3; i++) planets.push(new Planet());
         
-        // Initial Score Check
         updateStartScreenScore();
-        
-        gameLoop();
 
     </script>
 </body>
